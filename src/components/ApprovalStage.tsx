@@ -1,8 +1,9 @@
 'use client'
-import { useState } from 'react'
-import type { ChangeEvent } from 'react'
+import { useEffect, useState } from 'react'
+import type { ChangeEvent, SyntheticEvent } from 'react'
 import { requestApprovalAction, createDraftAction } from '@/app/actions/approval'
 import { editReplicatesAction } from '@/app/actions/edit'
+import { getApprovalPayloadViewAction, type ApprovalPayloadView } from '@/app/actions/payloadView'
 import { HashChip } from './HashChip'
 import { PayloadDiff, type PayloadSnapshot } from './PayloadDiff'
 import { formatMoney } from './format'
@@ -48,11 +49,43 @@ export function ApprovalStage({
   const [invalidated, setInvalidated] = useState(false)
   const [snapshot, setSnapshot] = useState<PayloadSnapshot | null>(null)
 
+  const [payloadOpen, setPayloadOpen] = useState(false)
+  const [payloadView, setPayloadView] = useState<ApprovalPayloadView | null>(null)
+  const [payloadViewLoading, setPayloadViewLoading] = useState(false)
+  const [payloadViewError, setPayloadViewError] = useState<string | null>(null)
+
   const [editing, setEditing] = useState(false)
   const [reissuing, setReissuing] = useState(false)
   const [creating, setCreating] = useState(false)
   const [experimentId, setExperimentId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Re-fetches the server-derived, residue-free exact-payload view whenever
+  // the disclosure is open — both on first expand and whenever the
+  // underlying payload changes (edit -> invalidate) while it stays open —
+  // so the panel never shows a stale view next to a fresher hash/version.
+  useEffect(() => {
+    if (!payloadOpen) return
+    let cancelled = false
+    setPayloadViewLoading(true)
+    setPayloadViewError(null)
+    getApprovalPayloadViewAction(requestId)
+      .then((res) => {
+        if (cancelled) return
+        if (res.ok && res.view) setPayloadView(res.view)
+        else setPayloadViewError(res.reason ?? 'PAYLOAD_VIEW_FAILED')
+      })
+      .finally(() => {
+        if (!cancelled) setPayloadViewLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [payloadOpen, requestId, version, payloadHash])
+
+  function handlePayloadToggle(e: SyntheticEvent<HTMLDetailsElement>) {
+    setPayloadOpen(e.currentTarget.open)
+  }
 
   async function handleReplicatesChange(e: ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value
@@ -152,6 +185,70 @@ export function ApprovalStage({
           </dd>
         </div>
       </dl>
+
+      <details className="exact-payload" data-testid="exact-payload" onToggle={handlePayloadToggle}>
+        <summary>View exact payload</summary>
+        {payloadViewLoading && <p className="card-hint">Loading exact payload…</p>}
+        {payloadViewError && (
+          <p className="card-hint" data-testid="exact-payload-error">
+            {payloadViewError}
+          </p>
+        )}
+        {payloadView && !payloadViewLoading && (
+          <dl className="exact-payload-fields" data-testid="exact-payload-fields">
+            <div>
+              <dt>Method</dt>
+              <dd>{payloadView.method}</dd>
+            </div>
+            <div>
+              <dt>Experiment type</dt>
+              <dd>{payloadView.experimentType}</dd>
+            </div>
+            <div>
+              <dt>Target ID</dt>
+              <dd>{payloadView.targetId}</dd>
+            </div>
+            <div>
+              <dt>Candidates</dt>
+              <dd data-testid="exact-payload-candidates">
+                {payloadView.candidateCount} candidates: {payloadView.candidateIds.join(', ')}
+              </dd>
+            </div>
+            <div>
+              <dt>Concentrations</dt>
+              <dd>{payloadView.concentrations.join(', ')}</dd>
+            </div>
+            <div>
+              <dt>Replicates</dt>
+              <dd>{payloadView.replicates}</dd>
+            </div>
+            <div>
+              <dt>Total cost</dt>
+              <dd>{formatMoney(payloadView.costTotalMinor, payloadView.currency)}</dd>
+            </div>
+            <div>
+              <dt>Environment</dt>
+              <dd>{payloadView.environment}</dd>
+            </div>
+            <div>
+              <dt>Operation</dt>
+              <dd>{payloadView.operation}</dd>
+            </div>
+            <div>
+              <dt>Payload version</dt>
+              <dd>{payloadView.version}</dd>
+            </div>
+            {payloadView.canonicalHash && (
+              <div>
+                <dt>Canonical hash</dt>
+                <dd>
+                  <HashChip hash={payloadView.canonicalHash} />
+                </dd>
+              </div>
+            )}
+          </dl>
+        )}
+      </details>
 
       <div className="field">
         <label htmlFor="edit-replicates">Edit replicates (demo: triggers invalidate/reissue)</label>
