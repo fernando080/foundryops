@@ -63,6 +63,9 @@ jobs:
       - name: Run complete release gate
         run: npm run demo-ready
 
+      - name: Audit full dependency graph, including development tooling
+        run: npm audit --audit-level=high
+
       - name: Capture deterministic demo stages
         shell: bash
         env:
