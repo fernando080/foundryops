@@ -8,6 +8,23 @@ This repository is deliberately **planning-first**. It gives Claude Code enough 
 - The dependency versions and `package-lock.json` are the exact set that passed the Slice 0 gate and are **not** migrated during this take-home: Next.js 15.5.x (Maintenance LTS), React 19, TypeScript 5.9, Vitest 4 / Vite 6, better-sqlite3 12.11.x, Zod 4, Drizzle. No migration to Next 16 / TypeScript 7 / Vite 8 / better-sqlite3 13 — those add no demo value and introduce avoidable ecosystem/native-addon risk.
 - Setup after switching Node: `nvm use` (reads `.nvmrc`), then `npm ci` against the committed lockfile — do not regenerate the dependency graph. Run `npm run verify` to reproduce the gate.
 
+## Running the application demo
+
+The MVP is a Next.js app that runs fully offline in mock mode. See **`docs/DEMO_RUNBOOK.md`** for the scripted 4–5 minute walkthrough.
+
+- `npm run demo` — start the app in mock mode (`LLM_PROVIDER=stub`, `FOUNDRY_MODE=mock`, `./data/foundryops.db`) at `http://localhost:3000`. If port 3000 is taken, add `-p <port>`.
+- Paste the demo request from the runbook and upload `fixtures/demo.fasta`.
+- Reset between runs: `rm -f data/foundryops.db data/foundryops.db-*`.
+
+### Quality gates
+
+- `npm run verify` — typecheck · unit + integration tests (Vitest) · production build · client-bundle secret scan · `npm audit` (prod deps). This is the core MUST gate and is green.
+- `npm run test:e2e` — Playwright drives the full scripted demo flow end-to-end (uses a separate `./data/e2e.db`, wiped before each run).
+- `npm run secret:scan` — repo secret scan via **gitleaks** (a required dev tool; install from <https://github.com/gitleaks/gitleaks>). No bypass is configured; if gitleaks is absent the command fails by design. The build also greps the client bundle for key patterns independently.
+- `npm run demo-ready` — `verify` + `secret:scan` + `test:e2e`.
+
+The optional **Gemini** LLM adapter and an **executable live Foundry HTTP client** are stretch, gated behind typed interfaces and disabled by default; the real Foundry client ships as a pinned OpenAPI snapshot + Zod contract schemas + mapper tests (`src/adapters/foundry/contract/`).
+
 ## Recommended workflow
 
 1. Work locally until the architecture and backlog are approved.
