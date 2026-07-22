@@ -8,16 +8,34 @@ import { z } from 'zod'
 
 export const MoneyMinorSchema = z.number().int()
 
-export const SourceLocationSchema = z.object({
+// R2 baseline (commit 61dc086) shape, restored verbatim.
+export const SequenceSourceLocationSchema = z.object({
   file: z.string(),
-  startLine: z.number().int(),
-  endLine: z.number().int(),
+  lineStart: z.number().int(),
+  lineEnd: z.number().int(),
 })
-export type SourceLocation = z.infer<typeof SourceLocationSchema>
+export type SequenceSourceLocation = z.infer<typeof SequenceSourceLocationSchema>
 
 // ---------------------------------------------------------------------------
 // Intent (LLM-authored, re-validated) — §6, §9
 // ---------------------------------------------------------------------------
+
+// R2 baseline (commit 61dc086) shape, restored verbatim: an extracted field
+// is a name/value/confidence/sourceSpan record, not a bare string.
+export const ExtractedFieldSchema = z.object({
+  name: z.string(),
+  value: z.union([z.string(), z.number(), z.boolean(), z.null()]),
+  confidence: z.number().min(0).max(1),
+  sourceSpan: z.object({ start: z.number().int(), end: z.number().int() }).nullable(),
+})
+export type ExtractedField = z.infer<typeof ExtractedFieldSchema>
+
+export const AmbiguitySchema = z.object({
+  field: z.string(),
+  reason: z.string(),
+  options: z.array(z.string()).optional(),
+})
+export type Ambiguity = z.infer<typeof AmbiguitySchema>
 
 export const RawExtractedIntentSchema = z.object({
   experimentType: z.string(),
@@ -27,8 +45,8 @@ export const RawExtractedIntentSchema = z.object({
   concentrations: z.array(z.number()).nullable(),
   replicates: z.number().int().nullable(),
   budget: MoneyMinorSchema.nullable(),
-  fields: z.array(z.string()),
-  ambiguities: z.array(z.string()),
+  fields: z.array(ExtractedFieldSchema),
+  ambiguities: z.array(AmbiguitySchema),
 })
 export type RawExtractedIntent = z.infer<typeof RawExtractedIntentSchema>
 
@@ -42,8 +60,8 @@ export const ValidatedAffinityIntentSchema = z.object({
   budget: MoneyMinorSchema.nullable(),
   approvalRequired: z.literal(true),
   assayDefaultsApplied: z.boolean(),
-  fields: z.array(z.string()),
-  ambiguities: z.array(z.string()),
+  fields: z.array(ExtractedFieldSchema),
+  ambiguities: z.array(AmbiguitySchema),
 })
 export type ValidatedAffinityIntent = z.infer<typeof ValidatedAffinityIntentSchema>
 
@@ -55,10 +73,10 @@ export const SequenceSchema = z.object({
   id: z.string(),
   rawHeader: z.string(),
   residues: z.string(),
-  chains: z.number().int(),
+  chains: z.array(z.string()),
   length: z.number().int(),
   normHash: z.string(),
-  sourceLoc: SourceLocationSchema,
+  sourceLoc: SequenceSourceLocationSchema,
 })
 export type Sequence = z.infer<typeof SequenceSchema>
 
@@ -73,11 +91,17 @@ export type SequenceSet = z.infer<typeof SequenceSetSchema>
 // Preflight — §6, §7a
 // ---------------------------------------------------------------------------
 
+export const PreflightEvidenceLocationSchema = z.object({
+  sequenceId: z.string().nullable(),
+  position: z.number().int().nullable(),
+})
+export type PreflightEvidenceLocation = z.infer<typeof PreflightEvidenceLocationSchema>
+
 export const PreflightFindingSchema = z.object({
   code: z.string(),
-  severity: z.string(),
+  severity: z.enum(['error', 'warning', 'info']),
   message: z.string(),
-  evidenceLocation: z.string(),
+  evidenceLocation: PreflightEvidenceLocationSchema,
   remediation: z.string(),
   blocksProgression: z.boolean(),
   duplicateOf: z.string().optional(),
@@ -89,16 +113,19 @@ export type PreflightFinding = z.infer<typeof PreflightFindingSchema>
 // ---------------------------------------------------------------------------
 
 export const TargetSchema = z.object({
-  id: z.string(),
+  foundryTargetId: z.string(),
   name: z.string(),
+  aliases: z.array(z.string()),
+  organism: z.string(),
+  uniprotId: z.string(),
 })
 export type Target = z.infer<typeof TargetSchema>
 
 export const TargetResolutionSchema = z.object({
-  status: z.enum(['resolved', 'ambiguous', 'missing']),
   query: z.string(),
-  candidates: z.array(TargetSchema),
-  selectedId: z.string().nullable(),
+  chosen: TargetSchema.nullable(),
+  alternatives: z.array(TargetSchema),
+  status: z.enum(['resolved', 'ambiguous', 'missing']),
 })
 export type TargetResolution = z.infer<typeof TargetResolutionSchema>
 
@@ -116,7 +143,7 @@ export const CostEstimateSchema = z.object({
   foundryQuoteRef: z.string(),
   lineItems: z.array(CostLineItemSchema),
   totalMinor: z.number().int(),
-  currency: z.string(),
+  currency: z.string().length(3),
   withinBudget: z.boolean(),
   overageMinor: z.number().int(),
   maxWithinBudget: z.number().int().nullable(),
@@ -130,11 +157,8 @@ export type CostEstimate = z.infer<typeof CostEstimateSchema>
 export const EnvironmentSchema = z.enum(['mock', 'sandbox', 'live'])
 export type Environment = z.infer<typeof EnvironmentSchema>
 
-// Operation is deliberately a plain string, not a closed enum: §6/§7c confirm
-// only the 'create_draft' literal (mock draft creation); the live/confirm
-// mutation operation name is not pinned anywhere in the spec or plan, so a
-// guessed literal risks rejecting whatever Task 2.x actually implements.
-export const OperationSchema = z.string()
+// R2 baseline (commit 61dc086) shape, restored verbatim.
+export const OperationSchema = z.enum(['create_draft', 'confirm_experiment'])
 export type Operation = z.infer<typeof OperationSchema>
 
 export const DraftPayloadSequenceRefSchema = z.object({
@@ -145,14 +169,14 @@ export type DraftPayloadSequenceRef = z.infer<typeof DraftPayloadSequenceRefSche
 
 export const DraftPayloadSchema = z.object({
   // semantic (hashed)
-  method: z.string(),
-  experimentType: z.string(),
+  method: z.literal('bli'),
+  experimentType: z.literal('affinity'),
   targetId: z.string(),
   sequences: z.array(DraftPayloadSequenceRefSchema),
   concentrations: z.array(z.number()),
   replicates: z.number().int(),
   costTotalMinor: z.number().int(),
-  currency: z.string(),
+  currency: z.string().length(3),
   environment: EnvironmentSchema,
   operation: OperationSchema,
   canonicalizerVersion: z.string(),
@@ -336,7 +360,7 @@ export type CustomerDraftTextSegment = z.infer<typeof CustomerDraftTextSegmentSc
 export const CustomerDraftEvidenceSegmentSchema = z.object({
   kind: z.literal('evidence'),
   evidenceId: z.string(),
-  claimType: z.string(),
+  claimType: z.enum(['confirmed', 'recommendation', 'inconclusive']),
   prefix: z.string(),
   suffix: z.string(),
 })
