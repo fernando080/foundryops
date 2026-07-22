@@ -347,6 +347,7 @@ export const EvidenceRecordSchema = z.object({
   displayLabel: z.string(),
   sourceRef: z.string(),
   provenanceChain: z.array(z.string()),
+  claimPolarity: z.enum(['confirmed', 'inconclusive']).nullish(),
 })
 export type EvidenceRecord = z.infer<typeof EvidenceRecordSchema>
 

@@ -1,5 +1,7 @@
 'use client'
 import type { DraftResult } from './CandidateCard'
+import type { EvidenceBundle } from '@/domain/schemas'
+import { EvidenceChip } from './EvidenceChip'
 
 const ERROR_LABEL: Record<string, string> = {
   LLM_ERROR: 'model error',
@@ -13,21 +15,34 @@ function formatDraftError(err: { code: string; detail: string }): string {
   return `Claim blocked: ${label} (${err.detail})`
 }
 
-// Presentational only. When ok, `draft.rendered` already has every number
-// inserted by renderCustomerDraft against the evidence bundle — this
-// component must never reformat, round, or recompute anything in it.
-export function DraftStage({ draft }: { draft: DraftResult }) {
+// Presentational only. When ok, every segment of `draft.draft.segments` is
+// rendered directly against `bundle`: text segments as plain text, evidence
+// segments as an EvidenceChip (the same provenance popover used in the
+// results grid) wrapping the prefix/suffix. This component must never
+// reformat, round, or recompute a value itself — every number a reviewer
+// sees here traces back through the chip to its evidence record.
+export function DraftStage({ draft, bundle }: { draft: DraftResult; bundle: EvidenceBundle }) {
   return (
     <section className="card" aria-label="Customer draft" data-testid="draft-stage">
       <h2 className="card-title">8. Customer draft</h2>
 
-      {draft.ok && draft.rendered ? (
+      {draft.ok && draft.draft ? (
         <>
           <span className="draft-not-sent-label" data-testid="draft-not-sent-label">
             Not sent — manual send only
           </span>
           <p className="draft-prose" data-testid="draft-rendered">
-            {draft.rendered}
+            {draft.draft.segments.map((s, i) =>
+              s.kind === 'text' ? (
+                <span key={i}>{s.text}</span>
+              ) : (
+                <span key={i} data-testid="draft-evidence-chip">
+                  {s.prefix}
+                  <EvidenceChip evidenceId={s.evidenceId} bundle={bundle} />
+                  {s.suffix}
+                </span>
+              ),
+            )}
           </p>
         </>
       ) : (

@@ -84,7 +84,7 @@ export function ResultsStage({
             </button>
           )}
 
-          {showDraft && <DraftStage draft={data.draft} />}
+          {showDraft && <DraftStage draft={data.draft} bundle={data.bundle} />}
         </>
       )}
     </section>

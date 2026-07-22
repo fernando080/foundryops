@@ -14,6 +14,14 @@ const RECO_LABEL: Record<string, string> = {
   drop: 'not recommended for follow-up',
 }
 
+const CLASS_POLARITY: Record<string, 'confirmed' | 'inconclusive'> = {
+  confirmed_binder: 'confirmed',
+  no_detectable_binding: 'confirmed',
+  non_binder: 'confirmed',
+  apparent_binder_poor_fit: 'inconclusive',
+  inconclusive_replicate_inconsistent: 'inconclusive',
+}
+
 export function buildEvidenceBundle(
   experimentId: string,
   pairs: { record: ResultRecord; qc: QCResult }[],
@@ -26,6 +34,7 @@ export function buildEvidenceBundle(
     v: string,
     label: string,
     ref: string,
+    claimPolarity?: 'confirmed' | 'inconclusive',
   ): EvidenceRecord => ({
     id,
     kind,
@@ -36,6 +45,7 @@ export function buildEvidenceBundle(
     displayLabel: label,
     sourceRef: ref,
     provenanceChain: [ref],
+    claimPolarity: claimPolarity ?? null,
   })
 
   const num = (
@@ -68,6 +78,7 @@ export function buildEvidenceBundle(
         CLASS_LABEL[qc.bindingClass] ?? qc.bindingClass,
         `${cid} class`,
         `${cid}:qc`,
+        CLASS_POLARITY[qc.bindingClass],
       ),
     )
     records.push(
