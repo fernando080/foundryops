@@ -1,9 +1,8 @@
 'use client'
 import { useState } from 'react'
 import type { ChangeEvent } from 'react'
-import { prepareRequestAction } from '@/app/actions/prepare'
 import { requestApprovalAction, createDraftAction } from '@/app/actions/approval'
-import { updateReplicatesAction } from '@/app/actions/edit'
+import { editReplicatesAction } from '@/app/actions/edit'
 import { HashChip } from './HashChip'
 import { PayloadDiff, type PayloadSnapshot } from './PayloadDiff'
 import { formatMoney } from './format'
@@ -64,20 +63,18 @@ export function ApprovalStage({
     setEditing(true)
     setError(null)
     try {
-      const upd = await updateReplicatesAction(requestId, next)
-      if (!upd.ok) {
-        setError(upd.reason ?? 'UPDATE_FAILED')
-        return
-      }
-      const prep = await prepareRequestAction(requestId, targetId, selectedCandidateIds)
-      if (!prep.ok || !prep.payloadHash || prep.version === undefined || prep.totalMinor === undefined) {
-        setError(prep.reason ?? 'PREPARE_FAILED')
+      // Single atomic server call: config edit, payload regeneration, and
+      // approval invalidation happen together in one transaction — there is
+      // no window where the request is READY_FOR_APPROVAL with a stale
+      // payload and a still-valid approval.
+      const res = await editReplicatesAction(requestId, version, next)
+      if (!res.ok || !res.payloadHash || res.version === undefined) {
+        setError(res.reason ?? 'EDIT_FAILED')
         return
       }
       setReplicates(next)
-      setVersion(prep.version)
-      setTotalMinor(prep.totalMinor)
-      setPayloadHash(prep.payloadHash)
+      setVersion(res.version)
+      setPayloadHash(res.payloadHash)
       setSnapshot(before)
       setInvalidated(true)
       setExperimentId(null)
