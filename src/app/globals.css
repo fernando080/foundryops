@@ -412,3 +412,119 @@ textarea {
 .card-approval {
   align-items: flex-start;
 }
+
+.card-approval-stage {
+  align-items: stretch;
+}
+
+.payload-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.6rem 1rem;
+  margin: 0;
+}
+
+.payload-summary div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.payload-summary dt {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+}
+
+.payload-summary dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.hash-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-weight: 600;
+}
+
+.hash-chip-label {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.hash-chip code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.banner {
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.banner-error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.banner-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.payload-diff {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: var(--color-surface);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.payload-diff th,
+.payload-diff td {
+  text-align: left;
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.payload-diff-changed td {
+  font-weight: 700;
+  color: var(--color-error);
+}
+
+.approval-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-locked {
+  background: var(--color-locked);
+  color: var(--color-accent-contrast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.draft-created {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-weight: 600;
+}

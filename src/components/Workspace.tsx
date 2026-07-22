@@ -3,12 +3,15 @@ import { useState } from 'react'
 import type { FoundryMode } from '@/infrastructure/config/env'
 import type { CostEstimate } from '@/domain/schemas'
 import { intakeAction, estimateAction } from '@/app/actions/intake'
+import { prepareRequestAction } from '@/app/actions/prepare'
+import { requestApprovalAction } from '@/app/actions/approval'
 import { Shell } from './Shell'
 import type { StepNode } from './Stepper'
 import { IntakeStage } from './IntakeStage'
 import { PreflightPanel } from './PreflightPanel'
 import { TargetPicker } from './TargetPicker'
 import { BudgetPanel } from './BudgetPanel'
+import { ApprovalStage, type ApprovalStageProps } from './ApprovalStage'
 
 type IntakeResult = Awaited<ReturnType<typeof intakeAction>>
 
@@ -31,6 +34,12 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
   const [cost, setCost] = useState<CostEstimate | null>(null)
   const [costLoading, setCostLoading] = useState(false)
 
+  const [requestId, setRequestId] = useState<string | null>(null)
+  const [approvalRequesting, setApprovalRequesting] = useState(false)
+  const [approvalError, setApprovalError] = useState<string | null>(null)
+  const [approvalEntry, setApprovalEntry] = useState<Omit<ApprovalStageProps, 'onDraftCreated'> | null>(null)
+  const [draftExperimentId, setDraftExperimentId] = useState<string | null>(null)
+
   const canRun = requestText.trim() !== '' && fastaText.trim() !== '' && !loading
 
   async function handleRunIntake() {
@@ -38,11 +47,16 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
     try {
       const r = await intakeAction(requestText, fastaText)
       setResult(r)
+      setApprovalEntry(null)
+      setApprovalError(null)
+      setDraftExperimentId(null)
       if (r.ok) {
+        setRequestId(r.requestId)
         setSelectedCandidateIds(new Set(r.sequenceSet.acceptedIds))
         setCost(r.cost)
         setSelectedTargetId(r.resolution.status === 'resolved' && r.resolution.chosen ? r.resolution.chosen.foundryTargetId : null)
       } else {
+        setRequestId(null)
         setSelectedCandidateIds(new Set())
         setCost(null)
         setSelectedTargetId(null)
@@ -59,6 +73,12 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
     if (next.has(id)) next.delete(id)
     else next.add(id)
     setSelectedCandidateIds(next)
+    // Selection changed — any previously requested approval is for a stale
+    // selection, so drop back out of the Approval stage until the operator
+    // re-requests approval against the new selection.
+    setApprovalEntry(null)
+    setApprovalError(null)
+    setDraftExperimentId(null)
     setCostLoading(true)
     try {
       const c = await estimateAction(next.size, budgetMinor)
@@ -76,17 +96,54 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
 
   const readyForApproval = selectedTargetId !== null && !!cost?.withinBudget && exactlyRequiredCandidatesSelected
 
-  function handleRequestApproval() {
-    // TODO(Slice 2): wire requestApprovalAction
+  const selectedTargetName = (() => {
+    if (!success || !selectedTargetId) return null
+    const { resolution } = success
+    if (resolution.status === 'resolved' && resolution.chosen?.foundryTargetId === selectedTargetId) return resolution.chosen.name
+    return resolution.alternatives.find((t) => t.foundryTargetId === selectedTargetId)?.name ?? null
+  })()
+
+  async function handleRequestApproval() {
+    if (!success || !success.intentResult.ok || !requestId || !selectedTargetId) return
+    setApprovalRequesting(true)
+    setApprovalError(null)
+    try {
+      const candidateIds = Array.from(selectedCandidateIds)
+      const prep = await prepareRequestAction(requestId, selectedTargetId, candidateIds)
+      if (!prep.ok || !prep.payloadHash || prep.version === undefined || prep.totalMinor === undefined) {
+        setApprovalError(prep.reason ?? 'PREPARE_FAILED')
+        return
+      }
+      const approval = await requestApprovalAction(requestId)
+      if (!approval.ok || !approval.approvalId || !approval.payloadHash) {
+        setApprovalError(approval.reason ?? 'APPROVAL_FAILED')
+        return
+      }
+      setDraftExperimentId(null)
+      setApprovalEntry({
+        requestId,
+        targetId: selectedTargetId,
+        targetName: selectedTargetName ?? selectedTargetId,
+        selectedCandidateIds: candidateIds,
+        approvalId: approval.approvalId,
+        payloadHash: approval.payloadHash,
+        version: prep.version,
+        totalMinor: prep.totalMinor,
+        currency: cost?.currency ?? 'USD',
+        replicates: success.intentResult.intent.replicates,
+      })
+    } finally {
+      setApprovalRequesting(false)
+    }
   }
 
   const stageNodes: StepNode[] = [
     { id: 'intake', label: 'Intake', status: success ? 'complete' : 'active' },
     { id: 'preflight', label: 'Preflight', status: !success ? 'locked' : readyForApproval ? 'complete' : 'active' },
-    { id: 'approval', label: 'Approval', status: 'locked' },
+    { id: 'approval', label: 'Approval', status: !success ? 'locked' : approvalEntry ? 'complete' : readyForApproval ? 'active' : 'locked' },
     { id: 'timeline', label: 'Timeline', status: 'locked' },
     { id: 'results', label: 'Results', status: 'locked' },
-    { id: 'draft', label: 'Draft', status: 'locked' },
+    { id: 'draft', label: 'Draft', status: draftExperimentId ? 'complete' : approvalEntry ? 'active' : 'locked' },
   ]
 
   return (
@@ -122,16 +179,31 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
             cost={cost}
             costLoading={costLoading}
           />
-          <section className="card card-approval" aria-label="Approval gate">
-            <button type="button" data-testid="request-approval" className="btn btn-primary" disabled={!readyForApproval} onClick={handleRequestApproval}>
-              Request approval
-            </button>
-            {!readyForApproval && (
-              <p className="card-hint">
-                Select exactly one target, keep candidates AC-1–AC-4 selected, and stay within budget to continue.
-              </p>
-            )}
-          </section>
+          {!approvalEntry && (
+            <section className="card card-approval" aria-label="Approval gate">
+              <button
+                type="button"
+                data-testid="request-approval"
+                className="btn btn-primary"
+                disabled={!readyForApproval || approvalRequesting}
+                onClick={handleRequestApproval}
+              >
+                {approvalRequesting ? 'Requesting approval…' : 'Request approval'}
+              </button>
+              {!readyForApproval && (
+                <p className="card-hint">
+                  Select exactly one target, keep candidates AC-1–AC-4 selected, and stay within budget to continue.
+                </p>
+              )}
+              {approvalError && (
+                <p className="card-hint" data-testid="approval-request-error">
+                  {approvalError}
+                </p>
+              )}
+            </section>
+          )}
+
+          {approvalEntry && success.intentResult.ok && <ApprovalStage {...approvalEntry} onDraftCreated={setDraftExperimentId} />}
         </>
       )}
     </Shell>
