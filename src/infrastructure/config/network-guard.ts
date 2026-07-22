@@ -18,10 +18,15 @@ interface ConnectOptionsLike {
 
 const LOOPBACK_HOSTS = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1', 'localhost'])
 
+// A single 0-255 octet, used to validate the three trailing octets of a
+// 127.0.0.0/8 address (the leading "127." is matched literally below).
+const OCTET = '(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)'
+const LOOPBACK_IPV4 = new RegExp(`^127\\.${OCTET}\\.${OCTET}\\.${OCTET}$`)
+
 function isLoopbackHost(host: string | undefined): boolean {
   if (host === undefined) return true
   if (LOOPBACK_HOSTS.has(host)) return true
-  return /^127\.(\d{1,3}\.){2}\d{1,3}$/.test(host)
+  return LOOPBACK_IPV4.test(host)
 }
 
 function resolveTargetHost(args: unknown[]): string | undefined {

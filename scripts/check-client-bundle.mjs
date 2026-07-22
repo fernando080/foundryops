@@ -3,7 +3,7 @@
 // Server-only secrets (Gemini API keys, the Foundry token) must never be
 // reachable from code shipped to the browser.
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { extname, join } from 'node:path'
 
 const BUNDLE_DIR = join(process.cwd(), '.next', 'static')
 
@@ -13,6 +13,11 @@ const FORBIDDEN_PATTERNS = [
   { name: 'FOUNDRY_TOKEN', pattern: /FOUNDRY_TOKEN/ },
   { name: 'Google API key literal (AIza…)', pattern: /AIza[0-9A-Za-z_-]{10,}/ },
 ]
+
+// .next/static also contains binary assets (fonts, images, media) that must
+// not be decoded as utf8 — only scan the text-like file types secrets could
+// plausibly end up in.
+const SCANNABLE_EXTENSIONS = new Set(['.js', '.mjs', '.css', '.html', '.json', '.txt'])
 
 function collectFiles(dir) {
   const results = []
@@ -39,9 +44,11 @@ try {
   process.exit(1)
 }
 
+const scannedFiles = staticFiles.filter((file) => SCANNABLE_EXTENSIONS.has(extname(file)))
+
 let hits = 0
 
-for (const file of staticFiles) {
+for (const file of scannedFiles) {
   const contents = readFileSync(file, 'utf8')
   for (const { name, pattern } of FORBIDDEN_PATTERNS) {
     if (pattern.test(contents)) {
@@ -56,4 +63,4 @@ if (hits > 0) {
   process.exit(1)
 }
 
-console.log(`check-client-bundle: OK (${staticFiles.length} files scanned, 0 hits).`)
+console.log(`check-client-bundle: OK (${scannedFiles.length} files scanned, 0 hits).`)

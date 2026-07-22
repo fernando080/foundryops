@@ -2,6 +2,9 @@
   "name": "foundryops",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20.15.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -18,7 +21,7 @@
   "dependencies": {
     "better-sqlite3": "12.11.1",
     "drizzle-orm": "0.45.2",
-    "next": "16.2.11",
+    "next": "15.5.21",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "4.4.3"
@@ -30,11 +33,12 @@
     "@types/react": "19.2.17",
     "cross-env": "10.1.0",
     "drizzle-kit": "0.31.10",
-    "typescript": "7.0.2",
+    "typescript": "5.9.3",
     "vitest": "4.1.10"
   },
   "overrides": {
     "postcss": "8.5.22",
-    "sharp": "0.35.3"
+    "sharp": "0.35.3",
+    "vite": "6.4.3"
   }
 }
