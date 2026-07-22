@@ -3,10 +3,20 @@ import { z } from 'zod'
 // ---------------------------------------------------------------------------
 // Shared primitives
 // ---------------------------------------------------------------------------
-// "Money is integer minor units (cents)" — §6 class legend. Applied to every
-// Money-typed field (budget, *Minor fields, amountMinor).
+// "Money is integer minor units (cents)" — §6 class legend. `*Minor`/
+// `amountMinor` fields (costTotalMinor, costSnapshotMinor, lineItem
+// amountMinor, etc.) are plain integer-minor numbers, typed inline as
+// `z.number().int()` where they occur. `budget` is the one Money-typed
+// field that is NOT bare-minor: §6 types it `Money|null`, and R2's
+// `MoneySchema` object shape is confirmed by the Task 1.2 fixture
+// (`demoRawIntent.budget = { amountMinor, currency }`) and the intake
+// layer's `intent.budget?.amountMinor` read — restored verbatim below.
 
-export const MoneyMinorSchema = z.number().int()
+export const MoneySchema = z.object({
+  amountMinor: z.number().int(),
+  currency: z.string().length(3),
+})
+export type Money = z.infer<typeof MoneySchema>
 
 // R2 baseline (commit 61dc086) shape, restored verbatim.
 export const SequenceSourceLocationSchema = z.object({
@@ -44,7 +54,7 @@ export const RawExtractedIntentSchema = z.object({
   requestedCount: z.number().int().nullable(),
   concentrations: z.array(z.number()).nullable(),
   replicates: z.number().int().nullable(),
-  budget: MoneyMinorSchema.nullable(),
+  budget: MoneySchema.nullable(),
   fields: z.array(ExtractedFieldSchema),
   ambiguities: z.array(AmbiguitySchema),
 })
@@ -57,7 +67,7 @@ export const ValidatedAffinityIntentSchema = z.object({
   requestedCount: z.number().int().nullable(),
   concentrations: z.array(z.number()),
   replicates: z.number().int(),
-  budget: MoneyMinorSchema.nullable(),
+  budget: MoneySchema.nullable(),
   approvalRequired: z.literal(true),
   assayDefaultsApplied: z.boolean(),
   fields: z.array(ExtractedFieldSchema),
