@@ -12,7 +12,7 @@ export function setRequestPayload(db: Db, id: string, p: { payloadJson: string; 
 export function setRequestState(db: Db, id: string, state: string): void { db.prepare('UPDATE requests SET request_state=? WHERE id=?').run(state, id) }
 export interface ApprovalRow { id: string; requestId: string; operation: string; environment: string; payloadHash: string; payloadVersion: number; costSnapshotMinor: number; actor: string; issuedAt: string; expiresAt: string; status: string; consumedAt: string | null }
 export function insertApproval(db: Db, a: Omit<ApprovalRow, 'consumedAt'>): void {
-  db.prepare('INSERT INTO approvals (id,request_id,operation,environment,payload_hash,payload_version,cost_snapshot_minor,actor,issued_at,expires_at,status,consumed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)').run(a.id, a.requestId, a.operation, a.environment, a.payloadHash, a.payloadVersion, a.costSnapshotMinor, a.actor, a.issuedAt, a.expiresAt, a.status)
+  db.prepare('INSERT OR IGNORE INTO approvals (id,request_id,operation,environment,payload_hash,payload_version,cost_snapshot_minor,actor,issued_at,expires_at,status,consumed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)').run(a.id, a.requestId, a.operation, a.environment, a.payloadHash, a.payloadVersion, a.costSnapshotMinor, a.actor, a.issuedAt, a.expiresAt, a.status)
 }
 export function loadApproval(db: Db, id: string): ApprovalRow | undefined {
   return db.prepare('SELECT id, request_id as requestId, operation, environment, payload_hash as payloadHash, payload_version as payloadVersion, cost_snapshot_minor as costSnapshotMinor, actor, issued_at as issuedAt, expires_at as expiresAt, status, consumed_at as consumedAt FROM approvals WHERE id=?').get(id) as ApprovalRow | undefined

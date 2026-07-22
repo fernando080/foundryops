@@ -12,8 +12,11 @@ export async function prepareRequestAction(requestId: string, targetId: string, 
   if (!req || !req.intentJson || !req.sequencesJson) return { ok: false, reason: 'REQUEST_NOT_FOUND' }
   const intent = ValidatedAffinityIntentSchema.parse(JSON.parse(req.intentJson))
   const seqSet = SequenceSetSchema.parse(JSON.parse(req.sequencesJson))
-  const selected = seqSet.sequences.filter((s) => selectedCandidateIds.includes(s.id))
-  const cost = await estimate(buildFoundryClient(), selected.length, intent.budget?.amountMinor ?? null)
+  const foundryClient = buildFoundryClient()
+  const targets = await foundryClient.searchTargets({ query: intent.targetQuery ?? '' })
+  if (!targets.some((t) => t.foundryTargetId === targetId)) return { ok: false, reason: 'INVALID_TARGET' }
+  const selected = seqSet.sequences.filter((s) => seqSet.acceptedIds.includes(s.id) && selectedCandidateIds.includes(s.id))
+  const cost = await estimate(foundryClient, selected.length, intent.budget?.amountMinor ?? null)
   const version = (req.payloadVersion ?? 0) + 1
   const payload: DraftPayload = { method: 'bli', experimentType: 'affinity', targetId,
     sequences: selected.map((s) => ({ id: s.id, residues: s.residues })), concentrations: intent.concentrations, replicates: intent.replicates,

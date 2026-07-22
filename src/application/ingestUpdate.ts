@@ -22,6 +22,18 @@ export function ingestUpdate(db: Db, input: { rawBody: string; headers: Record<s
     return { processingStatus: 'rejected_header_mismatch' }
   }
 
+  if (
+    typeof body.delivery_id !== 'string' ||
+    typeof body.data !== 'object' || body.data === null ||
+    typeof body.data.experiment_id !== 'string' ||
+    typeof body.data.update_type !== 'string' ||
+    typeof body.data.name !== 'string' ||
+    typeof body.data.description !== 'string'
+  ) {
+    appendEvent(db, { kind: 'update', detail: 'dead_letter', at: 'na' })
+    return { processingStatus: 'dead_letter' }
+  }
+
   const fresh = insertUpdateOnce(db, body.delivery_id, { experimentId: body.data.experiment_id, updateType: body.data.update_type, name: body.data.name, description: body.data.description, raw: input.rawBody })
   if (!fresh) return { processingStatus: 'duplicate' }
 
