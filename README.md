@@ -2,6 +2,12 @@
 
 This repository is deliberately **planning-first**. It gives Claude Code enough product and domain context to propose the architecture, stack, UX, safety model, evaluation strategy, and GitHub backlog **before** application code is written.
 
+## Development runtime (application implementation)
+
+- **Tested & recommended runtime: Node.js 22.23.1 LTS** (pinned in `.nvmrc`). `package.json` `engines` requires `^22.12.0 || ^24.0.0` and `packageManager` is pinned to `npm@10.9.8`.
+- The dependency versions and `package-lock.json` are the exact set that passed the Slice 0 gate and are **not** migrated during this take-home: Next.js 15.5.x (Maintenance LTS), React 19, TypeScript 5.9, Vitest 4 / Vite 6, better-sqlite3 12.11.x, Zod 4, Drizzle. No migration to Next 16 / TypeScript 7 / Vite 8 / better-sqlite3 13 — those add no demo value and introduce avoidable ecosystem/native-addon risk.
+- Setup after switching Node: `nvm use` (reads `.nvmrc`), then `npm ci` against the committed lockfile — do not regenerate the dependency graph. Run `npm run verify` to reproduce the gate.
+
 ## Recommended workflow
 
 1. Work locally until the architecture and backlog are approved.
