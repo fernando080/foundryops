@@ -1,0 +1,2 @@
+export const DEMO_REQUEST_TEXT = 'Prepare a BLI affinity characterization against EGFR using the attached sequences, six-point concentration series in triplicate. Keep it below the customer budget of $8,000, flag anything suspicious, and do not submit without my approval.'
+export const DEMO_REQUEST_NO_BUDGET = 'Prepare a BLI affinity characterization against EGFR using the attached sequences, six-point concentration series in triplicate.'
