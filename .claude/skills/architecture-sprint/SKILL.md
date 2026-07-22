@@ -1,60 +1,37 @@
 ---
 name: architecture-sprint
-description: Run the FoundryOps planning sprint before implementation. Produces a reviewable architecture, stack comparison, UX plan, safety model, eval strategy, delivery plan, ADR list, and explicit decision gates.
+description: Start the FoundryOps design workflow through Superpowers brainstorming, with staged reviews by the project product, architecture, security, evaluation, and UX agents.
 disable-model-invocation: true
 ---
-Run a planning-only architecture sprint for FoundryOps.
+Start the FoundryOps design workflow. This command is a project-specific entrypoint, not a competing planning methodology.
 
-## Inputs
+## Required process
 
-Read all files listed under **Read first** in `CLAUDE.md`, plus every existing file in `docs/planning/` and `docs/adr/`.
+1. **REQUIRED SUB-SKILL:** Invoke `superpowers:brainstorming` before producing a design or implementation plan.
+2. Read `CLAUDE.md`, all files under its **Read first** section, existing ADRs, and relevant recent commits.
+3. Treat the existing product documents as informed hypotheses. Ask one clarifying question at a time and preserve Superpowers' approval gates.
+4. During brainstorming, use the project agents as staged critics:
+   - consult `product-planner` and `solution-architect` after the goals, constraints, and success criteria are clear;
+   - consult `security-reviewer` and `eval-designer` against the proposed architecture before final design approval;
+   - consult `ux-reviewer` once the workflow and trust boundaries are stable.
+5. Synthesize their findings; do not paste five disconnected reports to the user.
+6. Ensure the design covers the FoundryOps domain checklist below.
+7. Save the approved written design under `docs/superpowers/specs/` and stop for the user's review of the actual file.
+8. Only after that written-spec review is approved, continue with `superpowers:writing-plans`.
 
-## Delegation
+## FoundryOps design checklist
 
-Use the project subagents in parallel where useful:
+- convincing 4–5 minute MVP and explicit scope cuts,
+- complete happy path plus critical failure paths,
+- two or more viable stack/architecture options,
+- domain types and experiment/approval state machines,
+- LLM responsibilities versus deterministic boundaries,
+- Foundry adapter plus contract-faithful offline mock,
+- approval freshness, idempotency, signed webhooks, replay safety, and audit trail,
+- evidence provenance and numerical-faithfulness rules,
+- screens, trust cues, and optional visual exploration,
+- observability, deterministic tests, agent evals, and release gates,
+- deployment, secrets, fixtures, and no-network/no-credential fallback,
+- ADRs and unresolved questions.
 
-- `solution-architect`
-- `product-planner`
-- `security-reviewer`
-- `eval-designer`
-- `ux-reviewer`
-
-Keep raw exploration in subagent contexts and synthesize one coherent recommendation.
-
-## Required proposal
-
-Return a reviewable proposal in the conversation before implementation work. Cover:
-
-1. product/MVP boundary and explicit scope cuts,
-2. system context and component architecture,
-3. two or more viable stack options with a weighted decision matrix,
-4. selected stack and rationale,
-5. core domain types and state machines,
-6. exact LLM responsibilities and deterministic boundaries,
-7. Foundry API/SDK adapter and contract-faithful mock,
-8. approval, idempotency, webhook, and audit design,
-9. persistence and evidence model,
-10. UI screens, states, and trust cues,
-11. observability, tests, and eval release gates,
-12. deployment, secrets, and offline/no-provider fallback,
-13. critical path, milestone order, and scope cuts,
-14. risks, assumptions, and open questions,
-15. ADRs that should be created.
-
-Use Mermaid diagrams where they improve clarity.
-
-## Decision gates
-
-End the proposal with a compact list of decisions that require human acceptance. Do not write application code. In plan mode, do not claim files were changed.
-
-After explicit approval and file-write permission, persist the accepted plan into:
-
-- `docs/planning/ARCHITECTURE.md`
-- `docs/planning/STACK_DECISION.md`
-- `docs/planning/UX_SPEC.md`
-- `docs/planning/EVAL_STRATEGY.md`
-- `docs/planning/DELIVERY_PLAN.md`
-- new ADR files under `docs/adr/`
-- `docs/OPEN_QUESTIONS.md`
-
-Set each approved planning document status to `approved` and include the approval date. Do not start implementation automatically.
+Do not independently generate a second architecture proposal in `docs/planning/`, write application code, scaffold the stack, publish GitHub issues, or skip directly to implementation.

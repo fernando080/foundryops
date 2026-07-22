@@ -6,7 +6,24 @@ Build a polished take-home demo for Adaptyv: an agent-assisted workflow that con
 
 ## Current phase
 
-The repository starts in **planning phase**. Do not create application code until the architecture proposal, stack decision, MVP boundary, and backlog have been reviewed and explicitly approved.
+The repository starts in **planning phase**. Do not create application code until the written design/specification, stack decision, MVP boundary, and implementation plan have been reviewed and explicitly approved.
+
+## Workflow authority
+
+Use **Superpowers as the process authority** and the FoundryOps project agents as domain reviewers. Do not run two competing planning or implementation methodologies.
+
+- Discovery and design: `superpowers:brainstorming`.
+- Written design source of truth: `docs/superpowers/specs/`.
+- Detailed implementation planning: `superpowers:writing-plans`.
+- Isolated execution: `superpowers:using-git-worktrees`.
+- Plan execution: prefer `superpowers:subagent-driven-development`; use `superpowers:executing-plans` only when a separate execution session is intentional.
+- Behavior changes: `superpowers:test-driven-development`.
+- Completion claims: `superpowers:verification-before-completion`.
+- Branch completion: `superpowers:finishing-a-development-branch`.
+
+The project agents `product-planner`, `solution-architect`, `security-reviewer`, `eval-designer`, and `ux-reviewer` critique the evolving design at the appropriate gates. They do not bypass Superpowers' question, approval, written-spec, or written-plan gates.
+
+`docs/planning/` contains concise decision summaries for humans and GitHub packaging. It must not become a second, contradictory implementation plan. ADRs remain the authoritative record for accepted consequential decisions.
 
 ## Read first
 
@@ -52,6 +69,8 @@ Treat these documents as product context, not immutable implementation decisions
 
 ## Backlog requirements
 
+Derive the GitHub backlog from the approved Superpowers spec and implementation plan. GitHub issues are navigation and review units, not a second source of architectural truth. Prefer 5–8 meaningful vertical-slice issues for the take-home over a large project-management backlog.
+
 Every implementation issue must contain:
 
 - context and user value
@@ -66,6 +85,8 @@ Use stable planning keys such as `FOUND-001`. Keep one issue small enough for on
 
 ## Coding rules after approval
 
+- Follow the approved Superpowers implementation plan and its task order.
+- Use true red-green-refactor TDD for behavior changes unless the user explicitly approves a documented exception.
 - Use strict typing at module boundaries.
 - Keep domain logic independent from web frameworks and model providers.
 - Put third-party API calls behind adapters.

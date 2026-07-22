@@ -63,15 +63,15 @@ Then run:
 /architecture-sprint
 ```
 
-Claude should return a proposal in the conversation before writing implementation code. Review the decision gates. Once you approve the proposal and allow file edits, ask it to persist the approved plan.
+This project command now enters the `superpowers:brainstorming` workflow. Claude should ask one question at a time, compare approaches, use the FoundryOps agents as staged domain reviewers, and present the design incrementally. After you approve the design, allow it to save and commit the written spec under `docs/superpowers/specs/`. Review that actual file before approving the transition to `superpowers:writing-plans`, which writes the detailed plan under `docs/superpowers/plans/`.
 
-Next run:
+Only after both the written spec and implementation plan are approved, run:
 
 ```text
 /create-backlog
 ```
 
-That skill writes reviewed issue specifications under `planning/issues/` and a machine-readable `planning/backlog.json`. It must not create GitHub issues by itself.
+That skill packages the approved plan into a small GitHub-facing backlog under `planning/issues/` plus `planning/backlog.json`. It must not redesign the system or create GitHub issues by itself.
 
 ## 3. Create the GitHub repository
 
@@ -122,13 +122,9 @@ Then:
 /implement-issue 12
 ```
 
-Claude must first restate the scope, acceptance criteria, risks, and test plan. It should create or check out a linked branch only after the issue is understood.
+Claude must first restate the scope, acceptance criteria, risks, and test plan. The command delegates process control to Superpowers: design changes return to brainstorming, stale/missing detail returns to writing-plans, implementation occurs in an isolated worktree, behavior is developed with TDD, and completion requires verification and branch review.
 
-A manual GitHub CLI alternative is:
-
-```bash
-gh issue develop 12 --checkout
-```
+Use one GitHub issue for a meaningful vertical slice, not for every 2–5 minute plan step. Superpowers keeps the fine-grained execution checklist in `docs/superpowers/plans/`.
 
 ## 6. Optional: Claude Code on GitHub
 
@@ -152,11 +148,12 @@ Rename it to `claude.yml` only after adding `ANTHROPIC_API_KEY` as a GitHub Acti
 
 ```text
 /architecture-sprint
+# approve the written spec, then approve the Superpowers implementation plan
 /create-backlog
 /demo-readiness planning-only
 ```
 
-The architecture sprint should settle, at minimum:
+The Superpowers-backed architecture sprint should settle, at minimum:
 
 - MVP boundary and demo story
 - backend/frontend topology
@@ -181,6 +178,9 @@ The architecture sprint should settle, at minimum:
 │   ├── DEMO_STORYBOARD.md
 │   ├── RESEARCH_NOTES.md
 │   ├── OPEN_QUESTIONS.md
+│   ├── superpowers/
+│   │   ├── specs/
+│   │   └── plans/
 │   ├── planning/
 │   └── adr/
 ├── planning/
