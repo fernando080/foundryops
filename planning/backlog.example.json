@@ -1,0 +1,29 @@
+{
+  "project": "FoundryOps",
+  "status": "approved",
+  "approved_at": "2026-07-21",
+  "issues": [
+    {
+      "key": "FOUND-001",
+      "title": "Epic: deliver the intake-to-draft vertical slice",
+      "body_file": "planning/issues/FOUND-001.md",
+      "kind": "epic",
+      "priority": "P0",
+      "effort": null,
+      "labels": ["type:epic", "phase:mvp"],
+      "parent": null,
+      "depends_on": []
+    },
+    {
+      "key": "FOUND-002",
+      "title": "Pin the minimal Foundry API contract and mock fixtures",
+      "body_file": "planning/issues/FOUND-002.md",
+      "kind": "task",
+      "priority": "P0",
+      "effort": "2h",
+      "labels": ["type:task", "area:integration", "phase:mvp"],
+      "parent": "FOUND-001",
+      "depends_on": []
+    }
+  ]
+}

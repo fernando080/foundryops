@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FoundryOps backlog",
+  "type": "object",
+  "required": [
+    "project",
+    "status",
+    "issues"
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "approved"
+      ]
+    },
+    "approved_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "title",
+          "body_file",
+          "kind",
+          "priority",
+          "labels"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^FOUND-[0-9]{3}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 3
+          },
+          "body_file": {
+            "type": "string",
+            "pattern": "^planning/issues/.+\\.md$"
+          },
+          "kind": {
+            "enum": [
+              "epic",
+              "feature",
+              "task",
+              "bug",
+              "spike"
+            ]
+          },
+          "priority": {
+            "enum": [
+              "P0",
+              "P1",
+              "P2",
+              "P3"
+            ]
+          },
+          "effort": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^FOUND-[0-9]{3}$"
+          },
+          "depends_on": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^FOUND-[0-9]{3}$"
+            },
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

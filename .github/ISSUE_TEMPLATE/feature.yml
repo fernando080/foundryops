@@ -1,0 +1,52 @@
+name: Product feature
+description: A user-visible vertical capability
+title: "[Feature] "
+labels:
+  - "type:feature"
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+    validations:
+      required: true
+  - type: textarea
+    id: journey
+    attributes:
+      label: User journey
+      description: Entry state, actions, decisions, and final state.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: MVP scope and non-goals
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: trust
+    attributes:
+      label: Trust, safety, and evidence behavior
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests and evals
+    validations:
+      required: true
+  - type: textarea
+    id: demo
+    attributes:
+      label: Loom/demo moment
+    validations:
+      required: true

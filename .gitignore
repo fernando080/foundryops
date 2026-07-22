@@ -1,0 +1,42 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node
+node_modules/
+.next/
+dist/
+build/
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Runtime data
+*.db
+*.sqlite
+*.sqlite3
+coverage.xml
+htmlcov/
+.coverage
+logs/
+artifacts/
+uploads/
+
+# Real biological or customer data must never be committed
+private-data/
+customer-data/
+real-sequences/

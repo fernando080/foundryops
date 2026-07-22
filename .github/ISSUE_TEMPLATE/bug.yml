@@ -1,0 +1,47 @@
+name: Bug report
+description: Reproducible incorrect behavior or failed invariant
+title: "[Bug] "
+labels:
+  - "type:bug"
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior or invariant
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include synthetic inputs only; redact secrets and real sequences.
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Blocker — unsafe action, data exposure, or demo failure
+        - Important — incorrect result with workaround
+        - Minor — polish or non-critical edge case
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs, trace, or screenshots
+      description: Redact tokens, customer data, and full raw sequences.
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression test
+      description: Test/eval that must fail before the fix and pass after it.
+    validations:
+      required: true

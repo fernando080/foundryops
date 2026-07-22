@@ -1,0 +1,12 @@
+{
+  "name": "foundryops-claude-bootstrap",
+  "generated_for": "FoundryOps take-home planning",
+  "file_count": 39,
+  "entrypoints": [
+    "README.md",
+    "CLAUDE.md",
+    ".claude/skills/architecture-sprint/SKILL.md",
+    ".claude/skills/create-backlog/SKILL.md",
+    "scripts/publish_backlog.py"
+  ]
+}

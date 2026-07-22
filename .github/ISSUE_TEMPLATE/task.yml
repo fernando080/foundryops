@@ -1,0 +1,58 @@
+name: Engineering task
+description: A scoped implementation or infrastructure task
+title: "[Task] "
+labels:
+  - "type:task"
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and user value
+      description: Why this work matters to the product or demo.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Concrete behavior and files/components in scope.
+    validations:
+      required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-goals
+      description: Work that must not be pulled into this issue.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use Markdown checkboxes and observable outcomes.
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests and evals
+      description: Deterministic tests, agent evals, and demo path to run.
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: Security and data handling
+      description: Approval, secrets, sequence data, prompt injection, or external-call implications.
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and blockers
+  - type: textarea
+    id: demo
+    attributes:
+      label: Demo impact
+      description: What becomes visible or more reliable in the Loom flow.
