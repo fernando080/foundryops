@@ -1,3 +1,6 @@
+import { env } from '@/infrastructure/config/env'
+import { Workspace } from '@/components/Workspace'
+
 export default function HomePage() {
-  return <main>FoundryOps — workspace</main>
+  return <Workspace foundryMode={env.foundryMode} />
 }
