@@ -12,9 +12,9 @@ Show the application and say:
 
 Paste a realistic request:
 
-> Prepare a BLI screening campaign against EGFR using the attached sequences. Keep it below the customer budget, flag anything suspicious, and do not submit it without my approval.
+> Prepare a BLI affinity characterization against EGFR using the attached sequences. Keep it below the customer budget, flag anything suspicious, and do not submit it without my approval.
 
-Upload the synthetic FASTA/CSV fixture.
+Upload the synthetic FASTA fixture.
 
 Expected UI:
 
@@ -55,7 +55,7 @@ Show synthetic results with:
 
 - strong consistent binder,
 - poor-fit apparent binder,
-- non-expression,
+- no detectable binding,
 - contradictory replicates.
 
 Make the separation between raw measurements, deterministic flags, and model explanation visually obvious.
