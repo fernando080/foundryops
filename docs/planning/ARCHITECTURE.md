@@ -1,6 +1,10 @@
 # Architecture proposal
 
-**Status:** draft
+**Status:** NON-AUTHORITATIVE TEMPLATE
+
+> ⚠️ Not a source of truth. The only canonical design + plan are
+> `docs/superpowers/specs/2026-07-22-foundryops-mvp-design.md` and
+> `docs/superpowers/plans/2026-07-22-foundryops-mvp.md`. Do not implement from this file.
 
 This file is intentionally a template. Populate it only after the architecture proposal is reviewed.
 
