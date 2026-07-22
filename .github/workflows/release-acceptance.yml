@@ -1,0 +1,106 @@
+name: Release acceptance audit
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-acceptance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  acceptance:
+    name: Clean install, security scan, tests, build, E2E, and visual capture
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      LLM_PROVIDER: stub
+      FOUNDRY_MODE: mock
+      FOUNDRYOPS_DB_PATH: ./data/e2e.db
+
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pinned Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Report runtime and commit
+        run: |
+          git rev-parse HEAD
+          node --version
+          npm --version
+
+      - name: Install dependencies from lockfile
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Gitleaks 8.30.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="8.30.1"
+          archive="gitleaks_${version}_linux_x64.tar.gz"
+          curl --fail --location --silent --show-error \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/${archive}" \
+            --output "/tmp/${archive}"
+          tar -xzf "/tmp/${archive}" -C /tmp gitleaks
+          sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Run complete release gate
+        run: npm run demo-ready
+
+      - name: Audit full dependency graph, including development tooling
+        run: npm audit --audit-level=high
+
+      - name: Capture deterministic demo stages
+        shell: bash
+        env:
+          AUDIT_OUTPUT_DIR: /tmp/foundryops-audit
+          AUDIT_BASE_URL: http://127.0.0.1:3100
+        run: |
+          set -euo pipefail
+          rm -f data/e2e.db data/e2e.db-*
+          npm run dev:e2e >/tmp/foundryops-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for _ in $(seq 1 90); do
+            if curl --fail --silent http://127.0.0.1:3100/ >/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then
+            cat /tmp/foundryops-server.log
+            exit 1
+          fi
+          node .github/scripts/capture-demo.mjs
+
+      - name: Upload visual-review screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: foundryops-release-screenshots
+          path: /tmp/foundryops-audit/*.png
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Assert verification did not modify tracked files
+        shell: bash
+        run: |
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
