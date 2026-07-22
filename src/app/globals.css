@@ -796,6 +796,10 @@ textarea {
   color: var(--color-success);
 }
 
+.qc-status-warning {
+  color: var(--color-warning);
+}
+
 .qc-status-fail {
   color: var(--color-error);
 }

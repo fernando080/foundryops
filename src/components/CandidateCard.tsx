@@ -48,7 +48,9 @@ export function CandidateCard({
   // The case the layout exists to make impossible to misread: a candidate
   // that passed QC (assay behaved) but shows no detectable binding (the
   // measured outcome). That is a valid negative, not a failed experiment.
-  const validNegative = qc.qcStatus === 'pass' && qc.bindingClass === 'no_detectable_binding'
+  const validNegative = qc.dataQuality === 'pass' && qc.bindingClass === 'no_detectable_binding'
+
+  const dataQualityLabel = qc.dataQuality === 'pass' ? '✅ Pass' : qc.dataQuality === 'warning' ? '⚠️ Warning' : '❌ Fail'
 
   return (
     <article className="candidate-card" data-testid={`candidate-card-${cid}`} aria-label={`Candidate ${cid}`}>
@@ -107,11 +109,9 @@ export function CandidateCard({
         </p>
         <span className="qc-policy-badge">Demo QC Policy v1</span>
 
-        <div className="qc-row" data-testid={`qc-data-quality-${cid}`} data-status={qc.qcStatus}>
+        <div className="qc-row" data-testid={`qc-data-quality-${cid}`} data-status={qc.dataQuality}>
           <span className="qc-row-label">Data quality</span>
-          <span className={`qc-row-value qc-status-${qc.qcStatus}`}>
-            {qc.qcStatus === 'pass' ? '✅ Pass' : '❌ Fail'}
-          </span>
+          <span className={`qc-row-value qc-status-${qc.dataQuality}`}>{dataQualityLabel}</span>
         </div>
         <div className="qc-row" data-testid={`qc-binding-outcome-${cid}`} data-binding-class={qc.bindingClass}>
           <span className="qc-row-label">Binding outcome</span>
@@ -127,25 +127,37 @@ export function CandidateCard({
           <div>
             <dt>Replicate consistency</dt>
             <dd>
-              {hasEvidence(bundle, cvEvidenceId) ? (
-                <EvidenceChip evidenceId={cvEvidenceId} bundle={bundle} />
+              {qc.replicateConsistency.status === 'not_applicable' ? (
+                'N/A'
               ) : (
-                formatNullableNumber(qc.replicateConsistency.cv)
-              )}{' '}
-              ({qc.replicateConsistency.consistent ? 'consistent' : 'inconsistent'})
+                <>
+                  {hasEvidence(bundle, cvEvidenceId) ? (
+                    <EvidenceChip evidenceId={cvEvidenceId} bundle={bundle} />
+                  ) : (
+                    formatNullableNumber(qc.replicateConsistency.cv)
+                  )}{' '}
+                  ({qc.replicateConsistency.status})
+                </>
+              )}
             </dd>
           </div>
           <div>
             <dt>Fit quality (RMSE max signal)</dt>
             <dd>
-              {hasEvidence(bundle, rmseEvidenceId) ? (
-                <EvidenceChip evidenceId={rmseEvidenceId} bundle={bundle} />
-              ) : record.rmseMaxSignalPct === null ? (
-                '—'
+              {qc.fitQuality.status === 'not_applicable' ? (
+                'N/A'
               ) : (
-                `${record.rmseMaxSignalPct}%`
-              )}{' '}
-              ({qc.fitQuality.pass ? 'pass' : 'fail'})
+                <>
+                  {hasEvidence(bundle, rmseEvidenceId) ? (
+                    <EvidenceChip evidenceId={rmseEvidenceId} bundle={bundle} />
+                  ) : record.rmseMaxSignalPct === null ? (
+                    '—'
+                  ) : (
+                    `${record.rmseMaxSignalPct}%`
+                  )}{' '}
+                  ({qc.fitQuality.status})
+                </>
+              )}
             </dd>
           </div>
           <div>

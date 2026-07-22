@@ -296,7 +296,7 @@ export type ResultRecord = z.infer<typeof ResultRecordSchema>
 
 export const QCResultSchema = z.object({
   candidateId: z.string(),
-  qcStatus: z.enum(['pass', 'fail']),
+  dataQuality: z.enum(['pass', 'warning', 'fail']),
   bindingClass: z.enum([
     'confirmed_binder',
     'apparent_binder_poor_fit',
@@ -312,11 +312,13 @@ export const QCResultSchema = z.object({
   replicateConsistency: z.object({
     cv: z.number().nullable(),
     consistent: z.boolean(),
+    status: z.enum(['consistent', 'inconsistent', 'not_applicable']),
   }),
   fitQuality: z.object({
     rmseMaxSignalPct: z.number().nullable(),
     reported: z.enum(['good', 'medium', 'poor']).nullable(),
     pass: z.boolean(),
+    status: z.enum(['pass', 'fail', 'not_applicable']),
   }),
   confidence: z.enum(['high', 'medium', 'low']).nullable(),
   controlOutcome: z.enum(['pass', 'fail', 'na']),
