@@ -19,6 +19,14 @@ node_modules/
 .next/
 dist/
 build/
+next-env.d.ts
+*.tsbuildinfo
+
+# FoundryOps app runtime data / test artifacts
+data/
+test-artifacts/
+playwright-report/
+*.db-*
 
 # IDE / OS
 .DS_Store
