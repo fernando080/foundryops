@@ -1,224 +1,106 @@
-# FoundryOps — Claude Code planning bootstrap
+# FoundryOps
 
-This repository is deliberately **planning-first**. It gives Claude Code enough product and domain context to propose the architecture, stack, UX, safety model, evaluation strategy, and GitHub backlog **before** application code is written.
+**FoundryOps is the safe operational layer around the Adaptyv Foundry API.** Paste an unstructured *BLI affinity characterization* request against EGFR and upload a FASTA, and FoundryOps produces a validated, budget‑aware Foundry **Draft** behind a human approval gate, tracks experiment status from signed updates, runs deterministic results QC, and drafts an evidence‑backed customer update whose every number is inserted by the renderer from evidence — never by the model.
 
-## Development runtime (application implementation)
+The thesis it demonstrates: **the model interprets ambiguity; deterministic software enforces truth, permissions, numbers, and state.** It runs fully offline in mock mode — no credentials, no network.
 
-- **Tested & recommended runtime: Node.js 22.23.1 LTS** (pinned in `.nvmrc`). `package.json` `engines` requires `^22.12.0 || ^24.0.0` and `packageManager` is pinned to `npm@10.9.8`.
-- The dependency versions and `package-lock.json` are the exact set that passed the Slice 0 gate and are **not** migrated during this take-home: Next.js 15.5.x (Maintenance LTS), React 19, TypeScript 5.9, Vitest 4 / Vite 6, better-sqlite3 12.11.x, Zod 4, Drizzle. No migration to Next 16 / TypeScript 7 / Vite 8 / better-sqlite3 13 — those add no demo value and introduce avoidable ecosystem/native-addon risk.
-- Setup after switching Node: `nvm use` (reads `.nvmrc`), then `npm ci` against the committed lockfile — do not regenerate the dependency graph. Run `npm run verify` to reproduce the gate.
+## Demo
 
-## Running the application demo
+- **Loom (4–5 min):** _<!-- LOOM_LINK_PLACEHOLDER: paste the recording URL here -->_
+- **Live demo:** _<!-- LIVE_DEMO_PLACEHOLDER: local-only by default; paste a hosted URL if deployed -->_
 
-The MVP is a Next.js app that runs fully offline in mock mode. See **`docs/DEMO_RUNBOOK.md`** for the scripted 4–5 minute walkthrough.
+| Stage | Screenshot |
+|---|---|
+| Intake + preflight + remediation | `docs/screenshots/01-intake.png` _(placeholder)_ |
+| Approval boundary (exact payload + hash) | `docs/screenshots/02-approval.png` _(placeholder)_ |
+| Signed update timeline + audit | `docs/screenshots/03-timeline.png` _(placeholder)_ |
+| Three‑layer results QC | `docs/screenshots/04-results.png` _(placeholder)_ |
+| Evidence‑backed customer draft | `docs/screenshots/05-draft.png` _(placeholder)_ |
 
-- `npm run demo` — start the app in mock mode (`LLM_PROVIDER=stub`, `FOUNDRY_MODE=mock`, `./data/foundryops.db`) at `http://localhost:3000`. If port 3000 is taken, add `-p <port>`.
-- Paste the demo request from the runbook and upload `fixtures/demo.fasta`.
-- Reset between runs: `rm -f data/foundryops.db data/foundryops.db-*`.
+_Screenshots are regenerated from the scripted demo; raw sequences are never shown (candidate IDs and counts only)._
 
-### Quality gates
-
-- `npm run verify` — typecheck · unit + integration tests (Vitest) · production build · client-bundle secret scan · `npm audit` (prod deps). This is the core MUST gate and is green.
-- `npm run test:e2e` — Playwright drives the full scripted demo flow end-to-end (uses a separate `./data/e2e.db`, wiped before each run).
-- `npm run secret:scan` — repo secret scan via **gitleaks** (a required dev tool; install from <https://github.com/gitleaks/gitleaks>). No bypass is configured; if gitleaks is absent the command fails by design. The build also greps the client bundle for key patterns independently.
-- `npm run demo-ready` — `verify` + `secret:scan` + `test:e2e`.
-
-The optional **Gemini** LLM adapter and an **executable live Foundry HTTP client** are stretch, gated behind typed interfaces and disabled by default; the real Foundry client ships as a pinned OpenAPI snapshot + Zod contract schemas + mapper tests (`src/adapters/foundry/contract/`).
-
-## Recommended workflow
-
-1. Work locally until the architecture and backlog are approved.
-2. Keep the GitHub repository private while the demo is being built.
-3. Publish only reviewed planning artifacts and issues.
-4. Implement one issue per branch and keep the live-lab adapter disabled by default.
-
-## 1. Prerequisites
-
-You need:
-
-- Git
-- Python 3.11+
-- GitHub CLI (`gh`) if you want to publish the backlog
-- Claude Code
-
-Verify them:
+## 60‑second local setup
 
 ```bash
-git --version
-python3 --version
-gh --version
-claude --version
-claude doctor
+nvm use            # Node 22.23.1 LTS (see .nvmrc); this project is tested on fnm too
+npm ci             # install from the committed lockfile — do not regenerate it
+npm run demo       # http://localhost:3000  (add -p <port> if 3000 is taken)
 ```
 
-Authenticate GitHub CLI when needed:
+Runs in mock mode by default (`LLM_PROVIDER=stub`, `FOUNDRY_MODE=mock`, `./data/foundryops.db`). Reset between takes: `rm -f data/foundryops.db data/foundryops.db-*`.
+
+## Exact demo request and fixture
+
+Paste this verbatim (the deterministic stub is keyed to it) and upload **`fixtures/demo.fasta`** (candidates AC‑1…AC‑8):
+
+> Prepare a BLI affinity characterization against EGFR using the attached sequences, six‑point concentration series in triplicate. Keep it below the customer budget of $8,000, flag anything suspicious, and do not submit without my approval.
+
+Full scene‑by‑scene walkthrough: **`docs/DEMO_RUNBOOK.md`**.
+
+## Architecture
+
+Layered TypeScript: pure `domain/` (validation, arithmetic, hashing, authorization, QC, evidence, rendering) with no framework or I/O; `application/` orchestrates use‑cases and owns SQLite transactions and depends only on ports; `adapters/` wraps Foundry and the LLM behind typed interfaces; `infrastructure/` holds Drizzle/SQLite, crypto, config; `src/app` + `src/components` are the thin Next.js presentation layer.
+
+```mermaid
+flowchart LR
+  subgraph Presentation["src/app + src/components (Next.js, thin)"]
+    UI["Workspace UI<br/>server actions"]
+  end
+  subgraph Application["application/ (ports only)"]
+    UC["intake · estimate · approval · createDraft<br/>editConfig · ingestUpdate · refreshStatus<br/>reviewResults · draftComms"]
+  end
+  subgraph Domain["domain/ (pure)"]
+    D["schemas · preflight · target · cost<br/>payload/canonical · approval/rules<br/>webhook (verify+wire+transition) · results/qc<br/>evidence · comms (validate+render)"]
+  end
+  subgraph Adapters["adapters/"]
+    F["FoundryClient: Mock (demo)<br/>HTTP contract schemas+mappers (SHOULD)"]
+    L["LlmClient: Deterministic (stub)<br/>Gemini (stretch)"]
+  end
+  subgraph Infra["infrastructure/"]
+    DB["Drizzle/SQLite · crypto · config · logging"]
+  end
+  UI --> UC --> D
+  UC --> F
+  UC --> L
+  UC --> DB
+```
+
+## LLM vs deterministic responsibility boundary
+
+The LLM may **only** (a) propose a `RawExtractedIntent` from the request text, and (b) compose customer‑draft **segments that reference evidence by id**. It never validates sequences, computes metrics, resolves approval policy, decides state transitions, invents values, executes Foundry operations, or writes a numeric value into prose. **No raw residues are ever sent to the LLM.** Everything load‑bearing — preflight, target resolution, cost arithmetic, canonical hashing, authorization, QC classification, evidence resolution, and number rendering — is deterministic code. The default `DeterministicLlmAdapter` is keyed to the exact demo request and returns reproducible fixtures; an unknown request returns `NO_STUB_FIXTURE` rather than a fabricated intent.
+
+## Guarantees
+
+- **Human approval, server‑authoritative.** Creating a Draft consumes a fully‑valid, non‑expired approval bound to `requestId + operation + environment + payloadVersion + payloadHash + costSnapshotMinor + status`. Server actions accept only ids; the payload is loaded server‑side (never trusted from the browser). Live mutations are non‑constructable without `FOUNDRY_MODE=live` + a server token.
+- **Atomic config edit.** Editing the assay (e.g. replicates) runs one SQLite transaction that rebuilds the authoritative payload, bumps the version, recomputes the canonical hash, **invalidates all valid approvals**, and moves the request out of the ready state — so a prior approval is unusable even if draft creation is called directly, with no observable intermediate ready window.
+- **Idempotency.** A Draft is keyed by `operationKey = requestId::operation::payloadHash` behind a unique index; a repeat returns the stored deterministic id. No reliance on an unverified provider `Idempotency-Key`.
+- **Webhook integrity.** A signed `experiment_update` is HMAC‑verified over the **raw bytes** first, then JSON‑parsed, header/body cross‑checked, and validated in full against an exact Zod wire schema before persistence; deliveries are de‑duplicated by `delivery_id`. The webhook carries **no status** — experiment status is fetched separately via `getExperimentStatus`, mapped wire→domain, then run through a rank‑based transition policy. A signed‑but‑invalid envelope is audit‑only.
+- **Evidence faithfulness (fail‑closed).** Every number in the customer draft is renderer‑inserted from an `EvidenceRecord`. Validation blocks a digit in any text/prefix/suffix segment, a missing evidence id, or an incompatible `claimType` (a `confirmed` claim cannot cite an `inconclusive` classification; recommendations require `approved_recommendation` evidence). Rendering never happens unless validation passes.
+- **QC honesty.** `dataQuality ∈ {pass, warning, fail}` is kept separate from the binding **outcome**; replicate consistency and fit quality render as **not applicable** when no KD exists (a valid "no detectable binding" is not a failed assay).
+
+## Verification
 
 ```bash
-gh auth login
+npm run verify      # typecheck · unit+integration tests · production build · client-bundle secret grep · npm audit
+npm run test:e2e    # Playwright drives the full scripted demo flow (separate ./data/e2e.db, wiped per run)
+npm run secret:scan # full gitleaks git-history secret scan (required dev tool)
+npm run demo-ready  # verify + secret:scan + test:e2e
 ```
 
-## 2. Start locally
+**Current evidence (this branch):** `npm run verify` is green — **109 unit + integration tests across 27 files**, production build clean, client‑bundle secret grep 0 hits, `npm audit` (prod deps) 0 vulnerabilities; a **golden/adversarial eval suite** (a meta‑test enforces ≥10 adversarial cases); and the **Playwright end‑to‑end demo journey** passes from a clean checkout. An independent CI audit on a hosted runner additionally ran a pinned Gitleaks git‑history scan (no secrets) and `npm audit --audit-level=high` (no high‑severity findings).
 
-Unzip this package, rename the directory if desired, and initialize Git:
+## Contract‑faithful vs synthetic
 
-```bash
-cd foundryops-claude-bootstrap
-git init -b main
-git add .
-git commit -m "chore: bootstrap FoundryOps planning workspace"
-```
+- **Contract‑faithful:** the Foundry request/response shapes are pinned to a downloaded OpenAPI snapshot (`src/adapters/foundry/contract/openapi.snapshot.json`, api version `0.0.2`) with Zod contract schemas + wire→domain mapper tests; the `experiment_update` webhook envelope, `X‑Adaptyv‑*` headers, and `sha256=<hmac>` signature match the documented contract; BLI result fields (KD, kon, koff, `rmse_max_signal_pct`, `fit_quality`, `confidence`) are the documented ones.
+- **Synthetic (clearly labelled):** all sequences, candidates, measurements, quotes, IDs, and webhook deliveries are generated demo fixtures. QC thresholds are a **Demo QC Policy v1**, explicitly not Adaptyv production thresholds. Costs use a synthetic price model.
 
-Start Claude Code in read-only planning mode:
+## Limitations and stretch integrations
 
-```bash
-claude --permission-mode plan
-```
+- **Frozen scope:** one BLI affinity / EGFR story; request text + FASTA only; single‑user local; offline mock is the required path.
+- **Stretch, disabled by default, behind typed interfaces:** the **Gemini** LLM adapter (`@google/genai`) and an **executable live Foundry HTTP client**. The real Foundry client currently ships as the pinned snapshot + contract schemas + mapper tests, not executable live calls.
+- **Not in scope:** additional experiment types, authentication, deployment infrastructure, sending email/Slack.
+- `gitleaks` is a required dev tool for `secret:scan`/`demo-ready` (install from <https://github.com/gitleaks/gitleaks>); no bypass is configured.
 
-Inside Claude Code, first verify that the project instructions loaded:
+## Development process
 
-```text
-/context
-```
-
-Then run:
-
-```text
-/architecture-sprint
-```
-
-This project command now enters the `superpowers:brainstorming` workflow. Claude should ask one question at a time, compare approaches, use the FoundryOps agents as staged domain reviewers, and present the design incrementally. After you approve the design, allow it to save and commit the written spec under `docs/superpowers/specs/`. Review that actual file before approving the transition to `superpowers:writing-plans`, which writes the detailed plan under `docs/superpowers/plans/`.
-
-Only after both the written spec and implementation plan are approved, run:
-
-```text
-/create-backlog
-```
-
-That skill packages the approved plan into a small GitHub-facing backlog under `planning/issues/` plus `planning/backlog.json`. It must not redesign the system or create GitHub issues by itself.
-
-## 3. Create the GitHub repository
-
-From the local directory:
-
-```bash
-gh repo create foundryops \
-  --private \
-  --source=. \
-  --remote=origin \
-  --push \
-  --description "Safe experiment intake and results-review workflow for Adaptyv Foundry"
-```
-
-You can make the repository public shortly before submitting the application, after checking that it contains no secrets, customer data, private notes, or proprietary fixtures.
-
-## 4. Review and publish the backlog
-
-Dry-run first. This prints the labels and issue commands without changing GitHub:
-
-```bash
-python3 scripts/publish_backlog.py \
-  --repo YOUR_GITHUB_USER/foundryops
-```
-
-After reviewing the output:
-
-```bash
-python3 scripts/publish_backlog.py \
-  --repo YOUR_GITHUB_USER/foundryops \
-  --assignee @me \
-  --apply
-```
-
-The publisher is designed to be idempotent. Each issue body contains a stable `foundryops-key` marker; rerunning the script skips issues that already exist.
-
-## 5. Implement issue by issue
-
-A typical local session is:
-
-```bash
-claude
-```
-
-Then:
-
-```text
-/implement-issue 12
-```
-
-Claude must first restate the scope, acceptance criteria, risks, and test plan. The command delegates process control to Superpowers: design changes return to brainstorming, stale/missing detail returns to writing-plans, implementation occurs in an isolated worktree, behavior is developed with TDD, and completion requires verification and branch review.
-
-Use one GitHub issue for a meaningful vertical slice, not for every 2–5 minute plan step. Superpowers keeps the fine-grained execution checklist in `docs/superpowers/plans/`.
-
-## 6. Optional: Claude Code on GitHub
-
-Do not enable this during the first architecture pass. Local plan mode is cheaper, easier to steer, and safer.
-
-After the repository conventions are stable, run this inside Claude Code:
-
-```text
-/install-github-app
-```
-
-A disabled workflow example is included at:
-
-```text
-.github/workflows/claude.yml.example
-```
-
-Rename it to `claude.yml` only after adding `ANTHROPIC_API_KEY` as a GitHub Actions secret and reviewing its permissions. Never commit the API key.
-
-## 7. Suggested planning sequence
-
-```text
-/architecture-sprint
-# approve the written spec, then approve the Superpowers implementation plan
-/create-backlog
-/demo-readiness planning-only
-```
-
-The Superpowers-backed architecture sprint should settle, at minimum:
-
-- MVP boundary and demo story
-- backend/frontend topology
-- Foundry adapter and mock strategy
-- structured LLM extraction contract
-- deterministic validation and policy engine
-- approval state machine
-- webhook ingestion and idempotency
-- results QC and evidence-backed drafting
-- observability and evaluation harness
-- deployment and no-credentials fallback
-
-## Repository map
-
-```text
-.
-├── CLAUDE.md
-├── docs/
-│   ├── PROJECT_BRIEF.md
-│   ├── PRODUCT_SPEC.md
-│   ├── SAFETY_AND_TRUST.md
-│   ├── DEMO_STORYBOARD.md
-│   ├── RESEARCH_NOTES.md
-│   ├── OPEN_QUESTIONS.md
-│   ├── superpowers/
-│   │   ├── specs/
-│   │   └── plans/
-│   ├── planning/
-│   └── adr/
-├── planning/
-│   ├── backlog.json
-│   └── issues/
-├── .claude/
-│   ├── agents/
-│   └── skills/
-├── .github/
-│   ├── ISSUE_TEMPLATE/
-│   └── pull_request_template.md
-└── scripts/
-    └── publish_backlog.py
-```
-
-## Hard rule
-
-Do not let the planning agent silently turn assumptions into code. Unresolved assumptions belong in `docs/OPEN_QUESTIONS.md`; accepted technical choices belong in ADRs.
+This repository began as a planning‑first workspace and was built with Claude Code + the Superpowers workflow (brainstorming → written spec → implementation plan → subagent‑driven TDD → verification → review). That process, the planning documents, and the design/plan of record are documented in **`docs/DEVELOPMENT_PROCESS.md`** and under `docs/superpowers/`.
