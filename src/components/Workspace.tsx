@@ -13,6 +13,7 @@ import { TargetPicker } from './TargetPicker'
 import { BudgetPanel } from './BudgetPanel'
 import { ApprovalStage, type ApprovalStageProps } from './ApprovalStage'
 import { TimelineStage } from './TimelineStage'
+import { ResultsStage } from './ResultsStage'
 
 type IntakeResult = Awaited<ReturnType<typeof intakeAction>>
 
@@ -41,6 +42,8 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
   const [approvalEntry, setApprovalEntry] = useState<Omit<ApprovalStageProps, 'onDraftCreated'> | null>(null)
   const [draftExperimentId, setDraftExperimentId] = useState<string | null>(null)
   const [showTimeline, setShowTimeline] = useState(false)
+  const [resultsLoaded, setResultsLoaded] = useState(false)
+  const [draftRevealed, setDraftRevealed] = useState(false)
 
   const canRun = requestText.trim() !== '' && fastaText.trim() !== '' && !loading
 
@@ -53,6 +56,8 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
       setApprovalError(null)
       setDraftExperimentId(null)
       setShowTimeline(false)
+      setResultsLoaded(false)
+      setDraftRevealed(false)
       if (r.ok) {
         setRequestId(r.requestId)
         setSelectedCandidateIds(new Set(r.sequenceSet.acceptedIds))
@@ -83,6 +88,8 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
     setApprovalError(null)
     setDraftExperimentId(null)
     setShowTimeline(false)
+    setResultsLoaded(false)
+    setDraftRevealed(false)
     setCostLoading(true)
     try {
       const c = await estimateAction(next.size, budgetMinor)
@@ -95,6 +102,8 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
   function handleDraftCreated(experimentId: string) {
     setDraftExperimentId(experimentId)
     setShowTimeline(false)
+    setResultsLoaded(false)
+    setDraftRevealed(false)
   }
 
   const success = result && result.ok ? result : null
@@ -152,8 +161,8 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
     { id: 'preflight', label: 'Preflight', status: !success ? 'locked' : readyForApproval ? 'complete' : 'active' },
     { id: 'approval', label: 'Approval', status: !success ? 'locked' : approvalEntry ? 'complete' : readyForApproval ? 'active' : 'locked' },
     { id: 'timeline', label: 'Timeline', status: !draftExperimentId ? 'locked' : showTimeline ? 'complete' : 'active' },
-    { id: 'results', label: 'Results', status: 'locked' },
-    { id: 'draft', label: 'Draft', status: draftExperimentId ? 'complete' : approvalEntry ? 'active' : 'locked' },
+    { id: 'results', label: 'Results', status: !showTimeline ? 'locked' : resultsLoaded ? 'complete' : 'active' },
+    { id: 'draft', label: 'Draft', status: !resultsLoaded ? 'locked' : draftRevealed ? 'complete' : 'active' },
   ]
 
   return (
@@ -224,6 +233,15 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
           )}
 
           {draftExperimentId && showTimeline && <TimelineStage experimentId={draftExperimentId} />}
+
+          {draftExperimentId && showTimeline && (
+            <ResultsStage
+              key={draftExperimentId}
+              experimentId={draftExperimentId}
+              onResultsLoaded={() => setResultsLoaded(true)}
+              onDraftRevealed={() => setDraftRevealed(true)}
+            />
+          )}
         </>
       )}
     </Shell>

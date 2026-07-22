@@ -18,10 +18,15 @@
   --color-locked: #9aa1ad;
 
   /* Three-layer palette (measured data / deterministic rules / model
-     interpretation) — stubbed here for later slices per product principles. */
-  --color-layer-measured: #2f5fd7;
-  --color-layer-deterministic: #187a4a;
-  --color-layer-interpreted: #7a3fc9;
+     interpretation) — per product principles: keep these visually and
+     typographically distinct so the separation survives grayscale.
+     Layer A = slate + monospace, Layer B = teal, Layer C = violet + italic. */
+  --color-layer-measured: #334155;
+  --color-layer-measured-bg: #eef2f6;
+  --color-layer-deterministic: #0f766e;
+  --color-layer-deterministic-bg: #e3f4f1;
+  --color-layer-interpreted: #6d28d9;
+  --color-layer-interpreted-bg: #f2ecfd;
 
   --radius: 10px;
   --shadow-card: 0 1px 2px rgba(16, 20, 30, 0.06), 0 1px 1px rgba(16, 20, 30, 0.04);
@@ -44,6 +49,13 @@
     --color-error: #f2726d;
     --color-error-bg: #3a1917;
     --color-locked: #5b6270;
+
+    --color-layer-measured: #cbd5e1;
+    --color-layer-measured-bg: #1c2534;
+    --color-layer-deterministic: #5eead4;
+    --color-layer-deterministic-bg: #0e2b28;
+    --color-layer-interpreted: #c4b5fd;
+    --color-layer-interpreted-bg: #241a3d;
   }
 }
 
@@ -652,4 +664,276 @@ textarea {
 .audit-entry-at {
   color: var(--color-text-muted);
   font-size: 0.75rem;
+}
+
+/* ---------------------------------------------------------------------
+   Results — three-layer candidate cards (measured / deterministic QC /
+   model commentary) + evidence chips + customer draft.
+   --------------------------------------------------------------------- */
+
+.candidate-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.candidate-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+}
+
+.candidate-card-header {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+}
+
+.candidate-card-id {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.layer {
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.layer:last-child {
+  border-bottom: none;
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+}
+
+.layer-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Layer A — measured, read-only: slate + monospace. */
+.layer-measured {
+  background: var(--color-layer-measured-bg);
+  color: var(--color-layer-measured);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.layer-measured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem 1rem;
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.layer-measured-grid dt {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.layer-measured-grid dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Layer B — deterministic QC: teal. */
+.layer-qc {
+  background: var(--color-layer-deterministic-bg);
+  color: var(--color-text);
+}
+
+.layer-qc .layer-header {
+  color: var(--color-layer-deterministic);
+}
+
+.qc-policy-badge {
+  align-self: flex-start;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-layer-deterministic);
+  color: var(--color-surface);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.qc-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+}
+
+.qc-row-label {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  min-width: 8rem;
+}
+
+.qc-row-value {
+  font-weight: 700;
+}
+
+.qc-status-pass {
+  color: var(--color-success);
+}
+
+.qc-status-fail {
+  color: var(--color-error);
+}
+
+.qc-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.4rem 1rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.qc-detail-grid dt {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.qc-detail-grid dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.qc-warnings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.qc-warning-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+/* Layer C — model commentary: violet + italic prose. */
+.layer-commentary {
+  background: var(--color-layer-interpreted-bg);
+  color: var(--color-layer-interpreted);
+  font-style: italic;
+}
+
+.layer-commentary .layer-header {
+  color: var(--color-layer-interpreted);
+}
+
+.layer-commentary p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.evidence-chip-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.evidence-chip {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-style: normal;
+  color: inherit;
+  cursor: pointer;
+  border-bottom: 1px dotted currentColor;
+}
+
+.evidence-chip-missing {
+  color: var(--color-text-muted);
+}
+
+.evidence-popover {
+  position: absolute;
+  z-index: 30;
+  top: 100%;
+  left: 0;
+  margin-top: 0.3rem;
+  min-width: 220px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+  padding: 0.6rem 0.75rem;
+  font-style: normal;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--color-text);
+  font-size: 0.8rem;
+}
+
+.evidence-popover dl {
+  margin: 0;
+}
+
+.evidence-popover dt {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.evidence-popover dt:first-child {
+  margin-top: 0;
+}
+
+.evidence-popover dd {
+  margin: 0;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.draft-not-sent-label {
+  align-self: flex-start;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.draft-prose {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.draft-blocked-list {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
