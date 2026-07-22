@@ -12,6 +12,7 @@ import { PreflightPanel } from './PreflightPanel'
 import { TargetPicker } from './TargetPicker'
 import { BudgetPanel } from './BudgetPanel'
 import { ApprovalStage, type ApprovalStageProps } from './ApprovalStage'
+import { TimelineStage } from './TimelineStage'
 
 type IntakeResult = Awaited<ReturnType<typeof intakeAction>>
 
@@ -39,6 +40,7 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
   const [approvalError, setApprovalError] = useState<string | null>(null)
   const [approvalEntry, setApprovalEntry] = useState<Omit<ApprovalStageProps, 'onDraftCreated'> | null>(null)
   const [draftExperimentId, setDraftExperimentId] = useState<string | null>(null)
+  const [showTimeline, setShowTimeline] = useState(false)
 
   const canRun = requestText.trim() !== '' && fastaText.trim() !== '' && !loading
 
@@ -50,6 +52,7 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
       setApprovalEntry(null)
       setApprovalError(null)
       setDraftExperimentId(null)
+      setShowTimeline(false)
       if (r.ok) {
         setRequestId(r.requestId)
         setSelectedCandidateIds(new Set(r.sequenceSet.acceptedIds))
@@ -79,6 +82,7 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
     setApprovalEntry(null)
     setApprovalError(null)
     setDraftExperimentId(null)
+    setShowTimeline(false)
     setCostLoading(true)
     try {
       const c = await estimateAction(next.size, budgetMinor)
@@ -86,6 +90,11 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
     } finally {
       setCostLoading(false)
     }
+  }
+
+  function handleDraftCreated(experimentId: string) {
+    setDraftExperimentId(experimentId)
+    setShowTimeline(false)
   }
 
   const success = result && result.ok ? result : null
@@ -120,6 +129,7 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
         return
       }
       setDraftExperimentId(null)
+      setShowTimeline(false)
       setApprovalEntry({
         requestId,
         targetId: selectedTargetId,
@@ -141,7 +151,7 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
     { id: 'intake', label: 'Intake', status: success ? 'complete' : 'active' },
     { id: 'preflight', label: 'Preflight', status: !success ? 'locked' : readyForApproval ? 'complete' : 'active' },
     { id: 'approval', label: 'Approval', status: !success ? 'locked' : approvalEntry ? 'complete' : readyForApproval ? 'active' : 'locked' },
-    { id: 'timeline', label: 'Timeline', status: 'locked' },
+    { id: 'timeline', label: 'Timeline', status: !draftExperimentId ? 'locked' : showTimeline ? 'complete' : 'active' },
     { id: 'results', label: 'Results', status: 'locked' },
     { id: 'draft', label: 'Draft', status: draftExperimentId ? 'complete' : approvalEntry ? 'active' : 'locked' },
   ]
@@ -203,7 +213,17 @@ export function Workspace({ foundryMode }: { foundryMode: FoundryMode }) {
             </section>
           )}
 
-          {approvalEntry && success.intentResult.ok && <ApprovalStage {...approvalEntry} onDraftCreated={setDraftExperimentId} />}
+          {approvalEntry && success.intentResult.ok && <ApprovalStage {...approvalEntry} onDraftCreated={handleDraftCreated} />}
+
+          {draftExperimentId && !showTimeline && (
+            <section className="card" aria-label="Timeline gate">
+              <button type="button" data-testid="goto-timeline" className="btn btn-primary" onClick={() => setShowTimeline(true)}>
+                View update timeline &amp; status
+              </button>
+            </section>
+          )}
+
+          {draftExperimentId && showTimeline && <TimelineStage experimentId={draftExperimentId} />}
         </>
       )}
     </Shell>
