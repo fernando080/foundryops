@@ -1,7 +1,17 @@
 import Database from 'better-sqlite3'
+import { mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { env } from '@/infrastructure/config/env'
 export type Db = Database.Database
-export function getDb(path: string): Db { const db = new Database(path); db.pragma('journal_mode = WAL'); return db }
+export function getDb(path: string): Db {
+  // On a clean checkout (or a fresh e2e run against ./data/e2e.db) the parent
+  // directory doesn't exist yet, and better-sqlite3 fails to create the file
+  // in a missing directory. ':memory:' has no parent directory to create.
+  if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true })
+  const db = new Database(path)
+  db.pragma('journal_mode = WAL')
+  return db
+}
 let shared: Db | null = null
 export function getSharedDb(): Db { if (!shared) { shared = getDb(env.dbPath); migrate(shared) } return shared }
 export function migrate(db: Db): void {

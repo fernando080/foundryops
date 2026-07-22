@@ -25,6 +25,7 @@ next-env.d.ts
 # FoundryOps app runtime data / test artifacts
 data/
 test-artifacts/
+test-results/
 playwright-report/
 *.db-*
 

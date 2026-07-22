@@ -11,6 +11,7 @@
     "build": "next build",
     "start": "next start",
     "demo": "cross-env LLM_PROVIDER=stub FOUNDRY_MODE=mock FOUNDRYOPS_DB_PATH=./data/foundryops.db next dev",
+    "dev:e2e": "cross-env FOUNDRYOPS_DB_PATH=./data/e2e.db LLM_PROVIDER=stub FOUNDRY_MODE=mock next dev -p 3100",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",

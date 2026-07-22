@@ -10,5 +10,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     setupFiles: ['./tests/setup.ts'],
+    // Playwright owns e2e/**; vitest's default spec glob would otherwise try
+    // (and fail) to collect e2e/demo.spec.ts as a vitest test file.
+    exclude: ['**/node_modules/**', '**/e2e/**'],
   },
 })
