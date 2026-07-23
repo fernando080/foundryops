@@ -3,6 +3,8 @@ name: PR2 independent release review
 on:
   push:
     branches: [audit/pr2-submission-714b246]
+  pull_request:
+    branches: [release/submission-polish]
   workflow_dispatch:
 
 permissions:
