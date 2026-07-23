@@ -155,7 +155,7 @@ export function ApprovalStage({
   return (
     <section className="card card-approval-stage" aria-label="Approval" data-testid="approval-stage">
       <h2 className="card-title">5. Approval</h2>
-      <p className="card-hint">This is the exact payload Foundry will receive. Nothing here is client-computed.</p>
+      <p className="card-hint">Approval summary for the exact server-side payload. Residues are redacted for recording safety; the canonical hash covers the complete server-side payload. Nothing here is client-computed.</p>
 
       <dl className="payload-summary">
         <div>
@@ -187,8 +187,8 @@ export function ApprovalStage({
       </dl>
 
       <details className="exact-payload" data-testid="exact-payload" onToggle={handlePayloadToggle}>
-        <summary>View exact payload</summary>
-        {payloadViewLoading && <p className="card-hint">Loading exact payload…</p>}
+        <summary>View approval-bound payload summary (residues redacted)</summary>
+        {payloadViewLoading && <p className="card-hint">Loading payload summary…</p>}
         {payloadViewError && (
           <p className="card-hint" data-testid="exact-payload-error">
             {payloadViewError}

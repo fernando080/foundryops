@@ -1,18 +1,17 @@
 # FoundryOps
 
-**FoundryOps is the safe operational layer around the Adaptyv Foundry API.** Paste an unstructured *BLI affinity characterization* request against EGFR and upload a FASTA, and FoundryOps produces a validated, budget‑aware Foundry **Draft** behind a human approval gate, tracks experiment status from signed updates, runs deterministic results QC, and drafts an evidence‑backed customer update whose every number is inserted by the renderer from evidence — never by the model.
+**FoundryOps is the safe operational layer around the Adaptyv Foundry API.** Paste an unstructured *BLI affinity characterization* request against EGFR and upload a FASTA, and FoundryOps produces a validated, budget‑aware Foundry **Draft** behind a human approval gate, ingests signed `experiment_update` messages into a trusted timeline and tracks experiment status separately (fetched via `getExperimentStatus`), runs deterministic results QC, and drafts an evidence‑backed customer update whose every number is inserted by the renderer from evidence — never by the model.
 
 The thesis it demonstrates: **the model interprets ambiguity; deterministic software enforces truth, permissions, numbers, and state.** It runs fully offline in mock mode — no credentials, no network.
 
 ## Demo
 
 - **Loom (4–5 min):** _<!-- LOOM_LINK_PLACEHOLDER: paste the recording URL here -->_
-- **Live demo:** _<!-- LIVE_DEMO_PLACEHOLDER: local-only by default; paste a hosted URL if deployed -->_
 
 | Stage | Screenshot |
 |---|---|
 | Intake + preflight + remediation | `docs/screenshots/01-intake.png` _(placeholder)_ |
-| Approval boundary (exact payload + hash) | `docs/screenshots/02-approval.png` _(placeholder)_ |
+| Approval boundary (payload summary + canonical hash) | `docs/screenshots/02-approval.png` _(placeholder)_ |
 | Signed update timeline + audit | `docs/screenshots/03-timeline.png` _(placeholder)_ |
 | Three‑layer results QC | `docs/screenshots/04-results.png` _(placeholder)_ |
 | Evidence‑backed customer draft | `docs/screenshots/05-draft.png` _(placeholder)_ |
@@ -87,7 +86,7 @@ npm run secret:scan # full gitleaks git-history secret scan (required dev tool)
 npm run demo-ready  # verify + secret:scan + test:e2e
 ```
 
-**Current evidence (this branch):** `npm run verify` is green — **109 unit + integration tests across 27 files**, production build clean, client‑bundle secret grep 0 hits, `npm audit` (prod deps) 0 vulnerabilities; a **golden/adversarial eval suite** (a meta‑test enforces ≥10 adversarial cases); and the **Playwright end‑to‑end demo journey** passes from a clean checkout. An independent CI audit on a hosted runner additionally ran a pinned Gitleaks git‑history scan (no secrets) and `npm audit --audit-level=high` (no high‑severity findings).
+**Current evidence (this branch):** `npm run demo-ready` is green — **112 unit + integration tests across 27 files** (including a **golden/adversarial eval suite**, where a meta‑test enforces ≥10 adversarial cases), production build clean, client‑bundle secret grep 0 hits, a **gitleaks 8.30.1 git‑history scan** (46 commits, no leaks), the **Playwright end‑to‑end demo journey**, and `npm audit --audit-level=high` (0 high‑severity findings) — all run locally on this branch head. Separately: an independent hosted CI audit validated the earlier base commit `3415969`; it did not run on this branch head.
 
 ## Contract‑faithful vs synthetic
 

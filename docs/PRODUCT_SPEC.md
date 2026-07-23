@@ -55,7 +55,7 @@ The UI shows:
 
 - normalized request,
 - accepted/rejected sequences,
-- exact outbound payload,
+- a residue-redacted summary of the server-side payload, with the canonical hash binding the complete server-side payload,
 - policy findings,
 - estimated cost,
 - an audit timeline.
