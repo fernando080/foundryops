@@ -4,7 +4,7 @@ on:
   push:
     branches: [audit/pr2-submission-714b246]
   pull_request:
-    branches: [release/submission-polish]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
