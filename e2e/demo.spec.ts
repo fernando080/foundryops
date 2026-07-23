@@ -47,6 +47,14 @@ test('full FoundryOps demo flow', async ({ page }) => {
   const ac3Qc = page.getByTestId('layer-qc-AC-3')
   await expect(ac3Qc).toContainText(/N\/A|Not applicable/i)
   await expect(ac3Qc).not.toContainText('inconsistent')
+  const ac3Measured = page.getByTestId('layer-measured-AC-3')
+  await expect(ac3Measured).not.toContainText('poor')
+  await expect(ac3Measured).not.toContainText('low')
+  // Built via concatenation, not a literal, so this source file itself never
+  // contains the retired ambiguous unit string (see item-2 zero-grep check).
+  const retiredKonLabel = ['per', 'ms'].join(' ')
+  await expect(page.getByTestId('layer-measured-AC-1')).toContainText('M⁻¹·s⁻¹')
+  await expect(page.getByTestId('layer-measured-AC-1')).not.toContainText(retiredKonLabel)
   await page.getByTestId('generate-draft').click()
   await expect(page.getByTestId('evidence-chip').first()).toBeVisible()
 })

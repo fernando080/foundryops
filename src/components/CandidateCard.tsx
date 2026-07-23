@@ -66,19 +66,19 @@ export function CandidateCard({
         </p>
         <dl className="layer-measured-grid">
           <div>
-            <dt>Per-replicate Kd</dt>
+            <dt>Per-replicate K_D</dt>
             <dd>{formatReplicateKdsNm(record.replicateKdsM)}</dd>
           </div>
           <div>
-            <dt>kon (per ms)</dt>
-            <dd>{formatNullableNumber(record.konPerMs)}</dd>
+            <dt>k_on (M⁻¹·s⁻¹)</dt>
+            <dd>{formatNullableNumber(record.konMInvSInv)}</dd>
           </div>
           <div>
-            <dt>koff (per s)</dt>
+            <dt>k_off (s⁻¹)</dt>
             <dd>{formatNullableNumber(record.koffPerS)}</dd>
           </div>
           <div>
-            <dt>Mean Kd</dt>
+            <dt>Mean K_D</dt>
             <dd>{formatMolarAsNm(record.kdMeanM)}</dd>
           </div>
           <div>

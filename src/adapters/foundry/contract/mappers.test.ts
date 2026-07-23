@@ -222,7 +222,7 @@ describe('mapAffinityResult', () => {
       experimentId: 'exp-demo',
       candidateId: 'AC-1',
       replicateKdsM: [2.0e-9, 2.1e-9, 1.95e-9],
-      konPerMs: 3.1e5,
+      konMInvSInv: 3.1e5,
       koffPerS: 6.3e-4,
       kdMeanM: 2.02e-9,
       rmseMaxSignalPct: 4.2,
@@ -269,7 +269,7 @@ describe('mapAffinityResult', () => {
     expect(ResultRecordSchema.parse(rec)).toEqual(rec)
     expect(rec.candidateId).toBe('unknown-candidate')
     expect(rec.replicateKdsM).toBeNull()
-    expect(rec.konPerMs).toBeNull()
+    expect(rec.konMInvSInv).toBeNull()
     expect(rec.koffPerS).toBeNull()
     expect(rec.kdMeanM).toBeNull()
     expect(rec.fitQualityReported).toBeNull()

@@ -279,7 +279,7 @@ export const ResultRecordSchema = z.object({
   experimentId: z.string(),
   candidateId: z.string(),
   replicateKdsM: z.array(z.number()).nullable(),
-  konPerMs: z.number().nullable(),
+  konMInvSInv: z.number().nullable(),
   koffPerS: z.number().nullable(),
   kdMeanM: z.number().nullable(),
   rmseMaxSignalPct: z.number().nullable(),
