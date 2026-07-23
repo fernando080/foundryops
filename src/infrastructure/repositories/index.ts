@@ -10,6 +10,9 @@ export function setRequestPayload(db: Db, id: string, p: { payloadJson: string; 
   db.prepare('UPDATE requests SET payload_json=?, payload_hash=?, payload_version=? WHERE id=?').run(p.payloadJson, p.payloadHash, p.payloadVersion, id)
 }
 export function setRequestState(db: Db, id: string, state: string): void { db.prepare('UPDATE requests SET request_state=? WHERE id=?').run(state, id) }
+export function setRequestIntent(db: Db, id: string, intentJson: string): void { db.prepare('UPDATE requests SET intent_json=? WHERE id=?').run(intentJson, id) }
+export function invalidateApprovals(db: Db, requestId: string): number { return db.prepare("UPDATE approvals SET status='invalidated' WHERE request_id=? AND status='valid'").run(requestId).changes }
+export function getApprovalStatus(db: Db, id: string): string | undefined { const r = db.prepare('SELECT status FROM approvals WHERE id=?').get(id) as { status: string } | undefined; return r?.status }
 export interface ApprovalRow { id: string; requestId: string; operation: string; environment: string; payloadHash: string; payloadVersion: number; costSnapshotMinor: number; actor: string; issuedAt: string; expiresAt: string; status: string; consumedAt: string | null }
 export function insertApproval(db: Db, a: Omit<ApprovalRow, 'consumedAt'>): void {
   db.prepare('INSERT OR IGNORE INTO approvals (id,request_id,operation,environment,payload_hash,payload_version,cost_snapshot_minor,actor,issued_at,expires_at,status,consumed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)').run(a.id, a.requestId, a.operation, a.environment, a.payloadHash, a.payloadVersion, a.costSnapshotMinor, a.actor, a.issuedAt, a.expiresAt, a.status)

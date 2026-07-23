@@ -40,9 +40,11 @@ export const EVAL_CASES: EvalCase[] = [
   { id: 'WH-03', layer: 'webhook', adversarial: true, run: () => { const u = signedUpdate({ experimentId: 'e', experimentCode: 'X', name: 'n', description: 'd', updateType: 'q' }, 'sec', 'D1'); assert.equal(crossCheckHeaders({ ...u.headers, 'X-Adaptyv-Delivery-Id': 'D9' }, u.body), false); assert.equal(mapWireStatus('bogus'), null) } },
   { id: 'QC-01', layer: 'qc', adversarial: false, run: () => assert.equal(classifyCandidate(byId('AC-1')).bindingClass, 'confirmed_binder') },
   { id: 'QC-02', layer: 'qc', adversarial: true, run: () => assert.equal(classifyCandidate(byId('AC-2')).bindingClass, 'apparent_binder_poor_fit') },
-  { id: 'QC-03', layer: 'qc', adversarial: true, run: () => { const r = classifyCandidate(byId('AC-3')); assert.equal(r.bindingClass, 'no_detectable_binding'); assert.equal(r.qcStatus, 'pass') } },
+  { id: 'QC-03', layer: 'qc', adversarial: true, run: () => { const r = classifyCandidate(byId('AC-3')); assert.equal(r.bindingClass, 'no_detectable_binding'); assert.equal(r.dataQuality, 'pass') } },
   { id: 'QC-04', layer: 'qc', adversarial: true, run: () => assert.equal(classifyCandidate(byId('AC-4')).bindingClass, 'inconclusive_replicate_inconsistent') },
-  { id: 'QC-05', layer: 'qc-data-quality', adversarial: true, run: () => assert.equal(classifyCandidate({ ...byId('AC-1'), controlOutcome: 'fail' }).qcStatus, 'fail') },
+  { id: 'QC-05', layer: 'qc-data-quality', adversarial: true, run: () => assert.equal(classifyCandidate({ ...byId('AC-1'), controlOutcome: 'fail' }).dataQuality, 'fail') },
+  { id: 'QC-06', layer: 'qc-data-quality', adversarial: true, run: () => assert.equal(classifyCandidate(byId('AC-2')).dataQuality, 'warning') },
+  { id: 'QC-07', layer: 'qc-data-quality', adversarial: true, run: () => assert.equal(classifyCandidate(byId('AC-3')).replicateConsistency.status, 'not_applicable') },
   { id: 'EVID-01', layer: 'evidence-faithfulness', adversarial: true, run: () => assert.equal(validateCustomerDraft(draft([{ kind: 'text', text: 'KD 2.0 nM' }]) as any, emptyBundle).ok, false) },
   { id: 'EVID-02', layer: 'evidence-faithfulness', adversarial: true, run: () => assert.equal(validateCustomerDraft(draft([{ kind: 'evidence', evidenceId: 'ev_missing', claimType: 'confirmed', prefix: '', suffix: '' }]) as any, emptyBundle).ok, false) },
 ]

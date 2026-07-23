@@ -92,7 +92,7 @@ describe('schemas + constants', () => {
       data: { type: 'experiment.update', experimentId: 'e', experimentCode: 'c', organizationId: 'o', updateId: 'u', name: 'n', description: 'd', updateType: 'status_note', eta: null, createdAt: 't' } })
     expect((u.data as any).status).toBeUndefined(); expect(WEBHOOK_API_VERSION).toBe('2026-02') })
   it('ResultRecord carries contract fields incl. confidence; QCResult separates qcStatus from bindingClass', () => {
-    ResultRecordSchema.parse({ experimentId: 'e', candidateId: 'AC-1', replicateKdsM: [2e-9], konPerMs: 3e5, koffPerS: 6e-4, kdMeanM: 2e-9, rmseMaxSignalPct: 4, fitQualityReported: 'good', confidence: 'high', controlOutcome: 'pass', measurements: [] })
+    ResultRecordSchema.parse({ experimentId: 'e', candidateId: 'AC-1', replicateKdsM: [2e-9], konMInvSInv: 3e5, koffPerS: 6e-4, kdMeanM: 2e-9, rmseMaxSignalPct: 4, fitQualityReported: 'good', confidence: 'high', controlOutcome: 'pass', measurements: [] })
     const q = QCResultSchema.parse({ candidateId: 'AC-1', qcStatus: 'pass', bindingClass: 'confirmed_binder', affinity: { kdM: 2e-9, ciLowM: null, ciHighM: null }, replicateConsistency: { cv: 0.03, consistent: true }, fitQuality: { rmseMaxSignalPct: 4, reported: 'good', pass: true }, confidence: 'high', controlOutcome: 'pass', recommendation: 'follow_up', appliedThresholds: 'demo-qc-policy@v1', warnings: [] })
     expect(q.qcStatus).toBe('pass') })
   it('exposes policy + wire status map', () => { expect(demoQcPolicyV1.version).toBe('demo-qc-policy@v1'); expect(WIRE_STATUS_MAP.done).toBe('Done') })
@@ -171,10 +171,10 @@ const CONC = [1e-7, 3e-8, 1e-8, 3e-9, 1e-9, 4e-10]
 const series = (candidateId: string, scale: number): Measurement[] =>
   CONC.flatMap(c => [0, 1, 2].map(rep => ({ candidateId, concentrationM: c, replicateIndex: rep, responseValue: Number((scale * (1 - Math.exp(-c / 1e-8))).toFixed(4)) })))
 const rec = (candidateId: string, over: Partial<ResultRecord>): ResultRecord => ({ experimentId: 'exp-demo', candidateId,
-  replicateKdsM: null, konPerMs: null, koffPerS: null, kdMeanM: null, rmseMaxSignalPct: null, fitQualityReported: null, confidence: null, controlOutcome: 'pass', measurements: series(candidateId, 1), ...over })
+  replicateKdsM: null, konMInvSInv: null, koffPerS: null, kdMeanM: null, rmseMaxSignalPct: null, fitQualityReported: null, confidence: null, controlOutcome: 'pass', measurements: series(candidateId, 1), ...over })
 export const demoResultRecords: ResultRecord[] = [
-  rec('AC-1', { replicateKdsM: [2.0e-9, 2.1e-9, 1.95e-9], kdMeanM: 2.02e-9, konPerMs: 3.1e5, koffPerS: 6.3e-4, rmseMaxSignalPct: 4.2, fitQualityReported: 'good', confidence: 'high' }),
-  rec('AC-2', { replicateKdsM: [40e-9, 44e-9, 38e-9], kdMeanM: 40.7e-9, konPerMs: 1.2e5, koffPerS: 4.9e-3, rmseMaxSignalPct: 22.5, fitQualityReported: 'poor', confidence: 'low' }),
+  rec('AC-1', { replicateKdsM: [2.0e-9, 2.1e-9, 1.95e-9], kdMeanM: 2.02e-9, konMInvSInv: 3.1e5, koffPerS: 6.3e-4, rmseMaxSignalPct: 4.2, fitQualityReported: 'good', confidence: 'high' }),
+  rec('AC-2', { replicateKdsM: [40e-9, 44e-9, 38e-9], kdMeanM: 40.7e-9, konMInvSInv: 1.2e5, koffPerS: 4.9e-3, rmseMaxSignalPct: 22.5, fitQualityReported: 'poor', confidence: 'low' }),
   rec('AC-3', { replicateKdsM: null, kdMeanM: null, rmseMaxSignalPct: null, fitQualityReported: 'poor', confidence: 'low' }),
   rec('AC-4', { replicateKdsM: [5e-9, 500e-9, 250e-9], kdMeanM: 251.7e-9, rmseMaxSignalPct: 30, fitQualityReported: 'medium', confidence: 'low' }),
 ]

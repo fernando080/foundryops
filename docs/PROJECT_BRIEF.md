@@ -12,7 +12,7 @@ The strongest take-home is therefore not another thin endpoint wrapper. It is th
 
 ## Product thesis
 
-A scientist or operator should be able to paste an unstructured request and upload a FASTA/CSV, then receive:
+A scientist or operator should be able to paste an unstructured request and upload a FASTA, then receive:
 
 1. a structured experiment intent,
 2. deterministic input and policy checks,

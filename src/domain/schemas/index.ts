@@ -279,7 +279,7 @@ export const ResultRecordSchema = z.object({
   experimentId: z.string(),
   candidateId: z.string(),
   replicateKdsM: z.array(z.number()).nullable(),
-  konPerMs: z.number().nullable(),
+  konMInvSInv: z.number().nullable(),
   koffPerS: z.number().nullable(),
   kdMeanM: z.number().nullable(),
   rmseMaxSignalPct: z.number().nullable(),
@@ -296,7 +296,7 @@ export type ResultRecord = z.infer<typeof ResultRecordSchema>
 
 export const QCResultSchema = z.object({
   candidateId: z.string(),
-  qcStatus: z.enum(['pass', 'fail']),
+  dataQuality: z.enum(['pass', 'warning', 'fail']),
   bindingClass: z.enum([
     'confirmed_binder',
     'apparent_binder_poor_fit',
@@ -312,11 +312,13 @@ export const QCResultSchema = z.object({
   replicateConsistency: z.object({
     cv: z.number().nullable(),
     consistent: z.boolean(),
+    status: z.enum(['consistent', 'inconsistent', 'not_applicable']),
   }),
   fitQuality: z.object({
     rmseMaxSignalPct: z.number().nullable(),
     reported: z.enum(['good', 'medium', 'poor']).nullable(),
     pass: z.boolean(),
+    status: z.enum(['pass', 'fail', 'not_applicable']),
   }),
   confidence: z.enum(['high', 'medium', 'low']).nullable(),
   controlOutcome: z.enum(['pass', 'fail', 'na']),
@@ -347,6 +349,7 @@ export const EvidenceRecordSchema = z.object({
   displayLabel: z.string(),
   sourceRef: z.string(),
   provenanceChain: z.array(z.string()),
+  claimPolarity: z.enum(['confirmed', 'inconclusive']).nullish(),
 })
 export type EvidenceRecord = z.infer<typeof EvidenceRecordSchema>
 

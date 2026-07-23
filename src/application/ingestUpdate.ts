@@ -1,42 +1,20 @@
 import { verifyUpdateSignature } from '@/domain/webhook/verify'
 import { crossCheckHeaders } from '@/domain/webhook/envelope'
+import { FoundryUpdateWireSchema } from '@/domain/webhook/wire'
 import { insertUpdateOnce, appendEvent } from '@/infrastructure/repositories'
 import type { Db } from '@/infrastructure/db/client'
-
 export function ingestUpdate(db: Db, input: { rawBody: string; headers: Record<string, string>; secret: string }): { processingStatus: string } {
-  if (!verifyUpdateSignature(input.rawBody, input.headers['X-Adaptyv-Signature'] ?? null, input.secret)) {
-    appendEvent(db, { kind: 'update', detail: 'rejected_signature', at: 'na' })
-    return { processingStatus: 'rejected_signature' }
-  }
-
-  let body: any
-  try {
-    body = JSON.parse(input.rawBody)
-  } catch {
-    appendEvent(db, { kind: 'update', detail: 'dead_letter', at: 'na' })
-    return { processingStatus: 'dead_letter' }
-  }
-
-  if (!crossCheckHeaders(input.headers, body)) {
-    appendEvent(db, { kind: 'update', detail: 'rejected_header_mismatch', at: 'na' })
-    return { processingStatus: 'rejected_header_mismatch' }
-  }
-
-  if (
-    typeof body.delivery_id !== 'string' ||
-    typeof body.data !== 'object' || body.data === null ||
-    typeof body.data.experiment_id !== 'string' ||
-    typeof body.data.update_type !== 'string' ||
-    typeof body.data.name !== 'string' ||
-    typeof body.data.description !== 'string'
-  ) {
-    appendEvent(db, { kind: 'update', detail: 'dead_letter', at: 'na' })
-    return { processingStatus: 'dead_letter' }
-  }
-
-  const fresh = insertUpdateOnce(db, body.delivery_id, { experimentId: body.data.experiment_id, updateType: body.data.update_type, name: body.data.name, description: body.data.description, raw: input.rawBody })
+  const audit = (detail: string) => appendEvent(db, { kind: 'update', detail, at: 'na' })
+  if (!verifyUpdateSignature(input.rawBody, input.headers['X-Adaptyv-Signature'] ?? null, input.secret)) { audit('rejected_signature'); return { processingStatus: 'rejected_signature' } }
+  let parsed: unknown
+  try { parsed = JSON.parse(input.rawBody) } catch { audit('dead_letter'); return { processingStatus: 'dead_letter' } }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) { audit('rejected_schema'); return { processingStatus: 'rejected_schema' } }
+  if (!crossCheckHeaders(input.headers, parsed)) { audit('rejected_header_mismatch'); return { processingStatus: 'rejected_header_mismatch' } }
+  const result = FoundryUpdateWireSchema.safeParse(parsed)
+  if (!result.success) { audit('rejected_schema'); return { processingStatus: 'rejected_schema' } }
+  const wire = result.data
+  const fresh = insertUpdateOnce(db, wire.delivery_id, { experimentId: wire.data.experiment_id, updateType: wire.data.update_type, name: wire.data.name, description: wire.data.description, raw: input.rawBody })
   if (!fresh) return { processingStatus: 'duplicate' }
-
-  appendEvent(db, { kind: 'update', detail: 'accepted', at: 'na' })
+  audit('accepted')
   return { processingStatus: 'accepted' }
 }

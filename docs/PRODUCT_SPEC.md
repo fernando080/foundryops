@@ -2,7 +2,7 @@
 
 ## MVP user story
 
-As an experiment operator, I can paste a natural-language request and upload a FASTA or CSV so that FoundryOps produces a validated, budget-aware Foundry draft and later helps me review results without making unsupported claims or performing unapproved actions.
+As an experiment operator, I can paste a natural-language request and upload a FASTA so that FoundryOps produces a validated, budget-aware Foundry draft and later helps me review results without making unsupported claims or performing unapproved actions.
 
 ## Core workflow
 
@@ -11,7 +11,7 @@ As an experiment operator, I can paste a natural-language request and upload a F
 Input:
 
 - unstructured email or Slack-style request,
-- FASTA or CSV sequence file,
+- FASTA sequence file,
 - optional customer and budget metadata.
 
 Output:
@@ -55,7 +55,7 @@ The UI shows:
 
 - normalized request,
 - accepted/rejected sequences,
-- exact outbound payload,
+- a residue-redacted summary of the server-side payload, with the canonical hash binding the complete server-side payload,
 - policy findings,
 - estimated cost,
 - an audit timeline.
@@ -70,7 +70,8 @@ The system ingests signed webhook events or deterministic mock events and displa
 
 For synthetic result fixtures, calculate and display:
 
-- expression outcome,
+- binding outcome (including "no detectable binding" as a valid negative),
+- data quality (pass / warning / fail), kept separate from the binding outcome,
 - binding classification,
 - affinity/kinetic measurements where present,
 - replicate consistency,
@@ -96,7 +97,7 @@ Include at least:
 
 - one strong, consistent binder,
 - one apparent binder with poor fit quality,
-- one non-expressing sequence,
+- one candidate with no detectable binding,
 - one candidate with contradictory replicates,
 - one malformed uploaded sequence,
 - one duplicate sequence under another ID,

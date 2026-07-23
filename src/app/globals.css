@@ -455,6 +455,44 @@ textarea {
   font-weight: 600;
 }
 
+.exact-payload {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+}
+
+.exact-payload summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.exact-payload-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.6rem 1rem;
+  margin: 0.75rem 0 0;
+}
+
+.exact-payload-fields div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.exact-payload-fields dt {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+}
+
+.exact-payload-fields dd {
+  margin: 0;
+  font-weight: 600;
+  word-break: break-word;
+}
+
 .hash-chip {
   display: inline-flex;
   align-items: center;
@@ -794,6 +832,10 @@ textarea {
 
 .qc-status-pass {
   color: var(--color-success);
+}
+
+.qc-status-warning {
+  color: var(--color-warning);
 }
 
 .qc-status-fail {

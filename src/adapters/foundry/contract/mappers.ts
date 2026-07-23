@@ -145,7 +145,7 @@ export function mapAffinityResult(wire: AffinityResultWire, experimentId: string
     experimentId,
     candidateId: wire.sequence.name ?? 'unknown-candidate',
     replicateKdsM: kds.length > 0 ? kds : null,
-    konPerMs: wire.kon_1to1?.value ?? null,
+    konMInvSInv: wire.kon_1to1?.value ?? null,
     koffPerS: wire.koff_1to1?.value ?? null,
     kdMeanM: wire.kd_mean ?? null,
     rmseMaxSignalPct: wire.rmse_max_signal_pct ?? null,
