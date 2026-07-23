@@ -27,7 +27,8 @@ flowchart LR
     FoundryAdapter --> MockOrFoundry
 ```
 
-Replace this placeholder with the approved diagram.
+The approved architecture diagram is maintained in README.md and in the
+canonical design specification linked above.
 
 ## 6. Component responsibilities
 

@@ -93,7 +93,7 @@ npm run secret:scan # full gitleaks git-history secret scan (required dev tool)
 npm run demo-ready  # verify + secret:scan + test:e2e
 ```
 
-**Current evidence (this branch):** `npm run demo-ready` is green — **112 unit + integration tests across 27 files** (including a **golden/adversarial eval suite**, where a meta‑test enforces ≥10 adversarial cases), production build clean, client‑bundle secret grep 0 hits, a **gitleaks 8.30.1 git‑history scan** (no leaks), the **Playwright end‑to‑end demo journey**, and `npm audit --audit-level=high` (0 high‑severity findings) — all run locally on this branch head. Separately: an independent hosted CI audit validated the earlier base commit `3415969`; it did not run on this branch head.
+**Current evidence (this branch):** `npm run demo-ready` is green — **112 unit + integration tests across 27 files** (including a **golden/adversarial eval suite**, where a meta‑test enforces ≥10 adversarial cases), production build clean, client‑bundle secret grep 0 hits, a **gitleaks 8.30.1 git‑history scan** (no leaks), the **Playwright end‑to‑end demo journey**, and `npm audit --audit-level=high` (0 high‑severity findings) — all run locally on this branch head. An independent **hosted audit passed on release‑candidate head `44ed2c6`**, covering a clean `npm ci`, OpenAPI snapshot digest verification, the complete `npm run demo-ready`, a gitleaks Git‑history scan, a full dependency audit, and deterministic release‑screenshot regeneration. The only commit since is this documentation/release‑metadata closeout — no product code, tests, dependencies, fixtures, or screenshots changed.
 
 ## Contract‑faithful vs synthetic
 
