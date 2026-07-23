@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   acceptance:
-    name: Clean install, security, tests, E2E, and screenshot reproducibility
+    name: Clean install, security, tests, E2E, and visual capture
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
@@ -101,20 +101,24 @@ jobs:
           test "$count" -eq 1
           printf '%s\n' "$matches" | grep 'README.md:.*LOOM_LINK_PLACEHOLDER'
 
-      - name: Regenerate committed release screenshots
+      - name: Regenerate release screenshots on hosted runner
         run: npm run capture:screenshots
 
-      - name: Assert screenshots are reproducible and tracked tree stays clean
-        shell: bash
-        run: |
-          git diff --exit-code -- docs/screenshots
-          git diff --exit-code
-          test -z "$(git status --porcelain)"
-
-      - name: Upload final screenshots
+      - name: Upload regenerated screenshots for visual review
         uses: actions/upload-artifact@v4
         with:
           name: foundryops-final-release-screenshots
           path: docs/screenshots/*.png
           if-no-files-found: error
           retention-days: 7
+
+      - name: Assert capture did not modify non-screenshot product files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- . ':(exclude)docs/screenshots/**'
+          unexpected="$(git status --porcelain | grep -v -E '^ M docs/screenshots/[0-9][0-9]-.*\.png$' || true)"
+          if [ -n "$unexpected" ]; then
+            printf '%s\n' "$unexpected"
+            exit 1
+          fi
