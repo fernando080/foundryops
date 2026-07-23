@@ -43,4 +43,14 @@ describe('ingestUpdate — complete envelope validation', () => {
   it('keeps a signed-but-schema-invalid envelope audit-only (not in the timeline)', () => {
     const r = ingest(db, signRaw(validBody({}, { experiment_id: '' }), 'experiment_update', 'D1'))
     expect(r.processingStatus).toBe('rejected_schema'); expect(getUpdates(db, 'exp-1').length).toBe(0) })
+  it('fails closed on signed non-object/array JSON (null, 42, "text", [], true): no throw, audit-only, no persistence', () => {
+    for (const primitive of [null, 42, 'text', [], true] as const) {
+      const s = signRaw(primitive, 'experiment_update', 'D1')
+      let out: { processingStatus: string } | undefined
+      expect(() => { out = ingest(db, s) }).not.toThrow()
+      expect(out!.processingStatus).not.toBe('accepted')
+      expect(out!.processingStatus).toBe('rejected_schema')
+      expect(getUpdates(db, 'exp-1').length).toBe(0)
+    }
+  })
 })

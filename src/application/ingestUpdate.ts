@@ -8,7 +8,8 @@ export function ingestUpdate(db: Db, input: { rawBody: string; headers: Record<s
   if (!verifyUpdateSignature(input.rawBody, input.headers['X-Adaptyv-Signature'] ?? null, input.secret)) { audit('rejected_signature'); return { processingStatus: 'rejected_signature' } }
   let parsed: unknown
   try { parsed = JSON.parse(input.rawBody) } catch { audit('dead_letter'); return { processingStatus: 'dead_letter' } }
-  if (!crossCheckHeaders(input.headers, parsed as { event?: unknown; delivery_id?: unknown })) { audit('rejected_header_mismatch'); return { processingStatus: 'rejected_header_mismatch' } }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) { audit('rejected_schema'); return { processingStatus: 'rejected_schema' } }
+  if (!crossCheckHeaders(input.headers, parsed)) { audit('rejected_header_mismatch'); return { processingStatus: 'rejected_header_mismatch' } }
   const result = FoundryUpdateWireSchema.safeParse(parsed)
   if (!result.success) { audit('rejected_schema'); return { processingStatus: 'rejected_schema' } }
   const wire = result.data
