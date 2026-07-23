@@ -86,7 +86,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git grep -n -E 'konPerMs|kon \(per ms\)|k_on \(per ms\)' -- ':!docs/screenshots/**'; then
+          if git grep -n -E 'konPerMs|kon \(per ms\)|k_on \(per ms\)' -- ':!docs/screenshots/**' ':!.github/workflows/final-release-audit.yml'; then
             echo 'Retired or ambiguous kon unit name remains in repository.' >&2
             exit 1
           fi
@@ -95,7 +95,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          matches="$(git grep -n 'PLACEHOLDER' || true)"
+          matches="$(git grep -n 'PLACEHOLDER' -- ':!.github/workflows/final-release-audit.yml' || true)"
           printf '%s\n' "$matches"
           count="$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l)"
           test "$count" -eq 1
