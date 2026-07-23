@@ -8,15 +8,22 @@ The thesis it demonstrates: **the model interprets ambiguity; deterministic soft
 
 - **Loom (4–5 min):** _<!-- LOOM_LINK_PLACEHOLDER: paste the recording URL here -->_
 
-| Stage | Screenshot |
-|---|---|
-| Intake + preflight + remediation | `docs/screenshots/01-intake.png` _(placeholder)_ |
-| Approval boundary (payload summary + canonical hash) | `docs/screenshots/02-approval.png` _(placeholder)_ |
-| Signed update timeline + audit | `docs/screenshots/03-timeline.png` _(placeholder)_ |
-| Three‑layer results QC | `docs/screenshots/04-results.png` _(placeholder)_ |
-| Evidence‑backed customer draft | `docs/screenshots/05-draft.png` _(placeholder)_ |
+### Intake, preflight & budget remediation
+![Intake, preflight and budget remediation](docs/screenshots/01-intake.png)
 
-_Screenshots are regenerated from the scripted demo; raw sequences are never shown (candidate IDs and counts only)._
+### Approval boundary (residue-redacted payload summary + canonical hash)
+![Approval boundary](docs/screenshots/02-approval.png)
+
+### Signed update timeline & audit
+![Signed update timeline and audit](docs/screenshots/03-timeline.png)
+
+### Three-layer results QC
+![Three-layer results QC](docs/screenshots/04-results.png)
+
+### Evidence-backed customer draft
+![Evidence-backed customer draft](docs/screenshots/05-draft.png)
+
+_Screenshots are regenerated from the scripted demo (`npm run capture:screenshots`); raw sequences are never shown (candidate IDs and counts only)._
 
 ## 60‑second local setup
 
