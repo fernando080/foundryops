@@ -1,0 +1,121 @@
+name: PR2 independent release review
+
+on:
+  push:
+    branches: [audit/pr2-submission-714b246]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr2-release-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  acceptance:
+    name: Clean install, security, tests, build, E2E, and visual capture
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CI: "true"
+      LLM_PROVIDER: stub
+      FOUNDRY_MODE: mock
+      FOUNDRYOPS_DB_PATH: ./data/e2e.db
+
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pinned Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Report runtime and commit
+        run: |
+          git rev-parse HEAD
+          node --version
+          npm --version
+
+      - name: Install dependencies from lockfile
+        run: npm ci
+
+      - name: Verify pinned OpenAPI snapshot digest
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs'
+          import { createHash } from 'node:crypto'
+          const bytes = readFileSync('src/adapters/foundry/contract/openapi.snapshot.json')
+          const actual = createHash('sha256').update(bytes).digest('hex')
+          const meta = readFileSync('src/adapters/foundry/contract/snapshot.meta.ts', 'utf8')
+          const expected = meta.match(/SNAPSHOT_SHA256\s*=\s*'([0-9a-f]{64})'/)?.[1]
+          if (!expected) throw new Error('Could not read SNAPSHOT_SHA256')
+          if (actual !== expected) throw new Error(`OpenAPI snapshot digest mismatch: ${actual} != ${expected}`)
+          console.log(`OpenAPI snapshot SHA256 verified: ${actual}`)
+          NODE
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Gitleaks 8.30.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="8.30.1"
+          archive="gitleaks_${version}_linux_x64.tar.gz"
+          curl --fail --location --silent --show-error \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/${archive}" \
+            --output "/tmp/${archive}"
+          tar -xzf "/tmp/${archive}" -C /tmp gitleaks
+          sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Run complete repository release gate
+        run: npm run demo-ready
+
+      - name: Audit full dependency graph
+        run: npm audit --audit-level=high
+
+      - name: Capture deterministic demo stages
+        shell: bash
+        env:
+          AUDIT_OUTPUT_DIR: /tmp/foundryops-pr2-audit
+          AUDIT_BASE_URL: http://127.0.0.1:3100
+        run: |
+          set -euo pipefail
+          rm -f data/e2e.db data/e2e.db-*
+          npm run dev:e2e >/tmp/foundryops-pr2-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for _ in $(seq 1 90); do
+            if curl --fail --silent http://127.0.0.1:3100/ >/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then
+            cat /tmp/foundryops-pr2-server.log
+            exit 1
+          fi
+          node .github/scripts/capture-pr2-demo.mjs
+
+      - name: Upload PR2 visual-review screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: foundryops-pr2-release-screenshots
+          path: /tmp/foundryops-pr2-audit/*.png
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Assert verification did not modify tracked files
+        shell: bash
+        run: |
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
